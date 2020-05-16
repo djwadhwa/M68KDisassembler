@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 5/16/2020 5:48:44 AM
+Created On: 5/16/2020 6:02:19 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :  68k Disassebler
@@ -15,19 +15,19 @@ Created On: 5/16/2020 5:48:44 AM
 0000001F= 43 72 65 61 74 6F ...     11  Creators            dc.b    'Creators: Mohammed Ali, DJ Wadhwa, Tarcisius',CR,LF,0
 0000004E                            12  
 0000004E= 53 74 61 72 74 20 ...     13  InputMsg1           dc.b    'Start by giving a starting address in range (00001000,00FFFFFF) ',0
-0000008F= 4E 6F 77 20 67 69 ...     14  InputMsg2           dc.b    'Now give an ending adress in range (00001000,00FFFFFF)',0
-000000C6= 54 68 69 73 20 69 ...     15  InputIsInc          dc.b    'This input is not an address',0
-000000E3= 54 68 65 20 65 6E ...     16  EndAddressInc       dc.b    'The end address is before the starting address, TRY AGAIN',0
-0000011D= 45 72 72 6F 72 20 ...     17  ErrorMsg            dc.b    'Error in Input',0
-0000012C                            18  
-0000012C= 43 6F 6D 70 6C 65 ...     19  HextoASCIIMsg       dc.b    'Completed hex to ASCII conversion',0
-0000014E= 43 6F 6D 70 6C 65 ...     20  ASCIItoHexMsg       dc.b    'Completed ASCII to hex conversion',CR,LF,0
-00000172                            21  
-00000172= 49 6E 70 75 74 73 ...     22  HelpMsg             dc.b    'Inputs must be in hexadecimal in this format --> FFFFFFFF',CR,LF,0
-000001AE= 57 6F 75 6C 64 20 ...     23  ContinueOrNotMsg    dc.b    'Would you like to Contunue or quit',0
-000001D1= 45 78 69 74 74 69 ...     24  ExitMsg             dc.b    'Exitting Program',0
-000001E2                            25  
-000001E2                            26  
+0000008F= 4E 6F 77 20 67 69 ...     14  InputMsg2           dc.b    'Now give an ending adress in range (00001000,00FFFFFF) ',0
+000000C7= 54 68 69 73 20 69 ...     15  InputIsInc          dc.b    'This input is not an address',0
+000000E4= 54 68 65 20 65 6E ...     16  EndAddressInc       dc.b    'The end address is before the starting address, TRY AGAIN',0
+0000011E= 45 72 72 6F 72 20 ...     17  ErrorMsg            dc.b    'Error in Input',0
+0000012D                            18  
+0000012D= 43 6F 6D 70 6C 65 ...     19  HextoASCIIMsg       dc.b    'Completed hex to ASCII conversion',0
+0000014F= 43 6F 6D 70 6C 65 ...     20  ASCIItoHexMsg       dc.b    'Completed ASCII to hex conversion',CR,LF,0
+00000173                            21  
+00000173= 49 6E 70 75 74 73 ...     22  HelpMsg             dc.b    'Inputs must be in hexadecimal in this format --> FFFFFFFF',CR,LF,0
+000001AF= 57 6F 75 6C 64 20 ...     23  ContinueOrNotMsg    dc.b    'Would you like to Contunue or quit',0
+000001D2= 45 78 69 74 74 69 ...     24  ExitMsg             dc.b    'Exitting Program',0
+000001E3                            25  
+000001E3                            26  
 00001000                            27      ORG    $1000    *Start at address $1000
 00001000                            28  START:                  ; first instruction of program
 00001000                            29  
@@ -48,25 +48,25 @@ Created On: 5/16/2020 5:48:44 AM
 0000101A                            44  *---------- Start of I/O Section ----------*
 0000101A                            45  
 0000101A                            46  MENU:
-0000101A                            47      
-0000101A  4EB9 00001020             48      jsr         StartAddressInput
+0000101A  4EB9 00001020             47      jsr         GetStartAddress
+00001020                            48      
 00001020                            49      
-00001020                            50      
-00001020                            51  StartAddressInput:
-00001020  43F8 004E                 52      lea         InputMsg1,A1
-00001024  103C 000E                 53      move.b      #14, D0
+00001020                            50  GetStartAddress:
+00001020                            51      
+00001020  103C 000E                 52      move.b      #14, D0
+00001024  43F8 004E                 53      lea         InputMsg1,A1
 00001028  4E4F                      54      trap        #15
 0000102A                            55      
 0000102A  103C 0002                 56      move.b      #2,D0
 0000102E  4E4F                      57      trap        #15
 00001030                            58      
-00001030  4EB9 00001036             59      jsr         ASCIItoHEX
+00001030  4EB9 00001036             59      jsr ASCIItoHex
 00001036                            60      
 00001036                            61  ASCIItoHex:
 00001036  4EB9 00001044             62          jsr     ASCII2Hex_init  
 0000103C  4EB9 0000104A             63          jsr     conversion_loop
 00001042  4E75                      64          rts                    
-00001044                            65          
+00001044                            65  
 00001044                            66  ASCII2Hex_init:   
 00001044  143C 0000                 67          move.b  #0,D2      
 00001048  4E75                      68          rts         
@@ -100,7 +100,7 @@ Created On: 5/16/2020 5:48:44 AM
 0000108C  60BC                      96          bra     conversion_loop
 0000108E                            97          
 0000108E                            98  ERROR:
-0000108E  43F8 011D                 99          lea     ErrorMsg,A1    
+0000108E  43F8 011E                 99          lea     ErrorMsg,A1    
 00001092  103C 000E                100          move.b  #14,D0
 00001096  4E4F                     101          trap    #15
 00001098                           102      
@@ -113,24 +113,19 @@ Created On: 5/16/2020 5:48:44 AM
 000010A0  4242                     109          clr     D2
 000010A2  4244                     110          clr     D4
 000010A4                           111      
-000010A4  43F8 014E                112          lea     ASCIItoHexMsg,A1
+000010A4  43F8 014F                112          lea     ASCIItoHexMsg,A1
 000010A8  103C 000E                113          move.b  #14,D0
 000010AC  4E4F                     114          trap    #15
 000010AE                           115  
 000010AE  4E75                     116          rts
 000010B0                           117  
-000010B0                           118      
-000010B0                           119      
-000010B0                           120      
-000010B0                           121           
-000010B0                           122  
-000010B0                           123  * Put program code here
-000010B0                           124  
-000010B0  FFFF FFFF                125      SIMHALT             ; halt simulator
-000010B4                           126  
-000010B4                           127  * Put variables and constants here
-000010B4                           128  
-000010B4                           129      END    START        ; last line of source
+000010B0                           118  * Put program code here
+000010B0                           119  
+000010B0  FFFF FFFF                120      SIMHALT             ; halt simulator
+000010B4                           121  
+000010B4                           122  * Put variables and constants here
+000010B4                           123  
+000010B4                           124      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -141,19 +136,20 @@ Symbol-name         Value
 -------------------------
 ASCII2HEX_INIT      1044
 ASCIITOHEX          1036
-ASCIITOHEXMSG       14E
-CONTINUEORNOTMSG    1AE
+ASCIITOHEXMSG       14F
+CONTINUEORNOTMSG    1AF
 CONVERSION_LOOP     104A
 CR                  D
 CREATORS            1F
 DONE                109E
-ENDADDRESSINC       E3
+ENDADDRESSINC       E4
 ERROR               108E
-ERRORMSG            11D
-EXITMSG             1D1
-HELPMSG             172
-HEXTOASCIIMSG       12C
-INPUTISINC          C6
+ERRORMSG            11E
+EXITMSG             1D2
+GETSTARTADDRESS     1020
+HELPMSG             173
+HEXTOASCIIMSG       12D
+INPUTISINC          C7
 INPUTMSG1           4E
 INPUTMSG2           8F
 LETTERS_CAP         106A
@@ -161,5 +157,4 @@ LF                  A
 MENU                101A
 NUMBERS             107C
 START               1000
-STARTADDRESSINPUT   1020
 STARTINGMSG         0
