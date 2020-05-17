@@ -46,6 +46,9 @@ START:                  ; first instruction of program
 MENU:
     jsr         GetStartAddress
     
+    jsr         GetEndAddress
+    
+    
     
 GetStartAddress:
     
@@ -57,6 +60,16 @@ GetStartAddress:
     trap        #15
     
     jsr ASCIItoHex
+    
+GetEndAddress:
+    move.b      #14,D0
+    lea         InputMsg2,A1
+    trap        #15
+    
+    move.b      #2,D0
+    trap        #15
+    
+    jsr         ASCIItoHex
     
 ASCIItoHex:
         jsr     ASCII2Hex_init  
