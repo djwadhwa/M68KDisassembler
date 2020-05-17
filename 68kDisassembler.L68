@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 5/16/2020 6:02:19 AM
+Created On: 5/17/2020 4:40:47 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :  68k Disassebler
@@ -48,84 +48,97 @@ Created On: 5/16/2020 6:02:19 AM
 0000101A                            44  *---------- Start of I/O Section ----------*
 0000101A                            45  
 0000101A                            46  MENU:
-0000101A  4EB9 00001020             47      jsr         GetStartAddress
+0000101A  4EB9 00001026             47      jsr         GetStartAddress
 00001020                            48      
-00001020                            49      
-00001020                            50  GetStartAddress:
-00001020                            51      
-00001020  103C 000E                 52      move.b      #14, D0
-00001024  43F8 004E                 53      lea         InputMsg1,A1
-00001028  4E4F                      54      trap        #15
-0000102A                            55      
-0000102A  103C 0002                 56      move.b      #2,D0
+00001020  4EB9 0000103C             49      jsr         GetEndAddress
+00001026                            50      
+00001026                            51      
+00001026                            52      
+00001026                            53  GetStartAddress:
+00001026                            54      
+00001026  103C 000E                 55      move.b      #14, D0
+0000102A  43F8 004E                 56      lea         InputMsg1,A1
 0000102E  4E4F                      57      trap        #15
 00001030                            58      
-00001030  4EB9 00001036             59      jsr ASCIItoHex
-00001036                            60      
-00001036                            61  ASCIItoHex:
-00001036  4EB9 00001044             62          jsr     ASCII2Hex_init  
-0000103C  4EB9 0000104A             63          jsr     conversion_loop
-00001042  4E75                      64          rts                    
-00001044                            65  
-00001044                            66  ASCII2Hex_init:   
-00001044  143C 0000                 67          move.b  #0,D2      
-00001048  4E75                      68          rts         
-0000104A                            69          
-0000104A                            70  conversion_loop:            
-0000104A  5282                      71          add.l   #1,D2     
-0000104C  B4BC 00000009             72          cmp.l   #9,D2 
-00001052  6700 004A                 73          BEQ     DONE        
-00001056  1819                      74          move.b  (A1)+,D4    
-00001058                            75          
-00001058  B83C 0040                 76          cmp.b   #$40,D4        
-0000105C  6E00 000C                 77          bgt     Letters_Cap  
-00001060                            78          
-00001060  B83C 0039                 79          cmp.b   #$39,D4
-00001064  6F00 0016                 80          BLE     Numbers      
-00001068  4E75                      81          rts
-0000106A                            82          
-0000106A                            83  Letters_Cap:      
-0000106A  B83C 0046                 84          cmp.b   #$46,D4          
-0000106E  6E00 001E                 85          bgt     ERROR  
-00001072  0404 0037                 86          sub.b   #$37,D4     
-00001076  E986                      87          asl.l   #4,D6       
-00001078  DC84                      88          add.l   D4,D6     
-0000107A  60CE                      89          bra     conversion_loop 
-0000107C                            90  Numbers:
-0000107C  B83C 0030                 91          cmp.b   #$30,D4         
-00001080  6D00 000C                 92          blt     ERROR        
-00001084  0404 0030                 93          sub.b   #$30,D4      
-00001088  E986                      94          asl.l   #4,D6        
-0000108A  DC84                      95          add.l   D4,D6     
-0000108C  60BC                      96          bra     conversion_loop
-0000108E                            97          
-0000108E                            98  ERROR:
-0000108E  43F8 011E                 99          lea     ErrorMsg,A1    
-00001092  103C 000E                100          move.b  #14,D0
-00001096  4E4F                     101          trap    #15
-00001098                           102      
-00001098  103C 0009                103          move.b  #9,D0
-0000109C  4E4F                     104          trap    #15
-0000109E                           105          
-0000109E                           106  DONE:
-0000109E                           107     
-0000109E  4241                     108          clr     D1
-000010A0  4242                     109          clr     D2
-000010A2  4244                     110          clr     D4
-000010A4                           111      
-000010A4  43F8 014F                112          lea     ASCIItoHexMsg,A1
-000010A8  103C 000E                113          move.b  #14,D0
-000010AC  4E4F                     114          trap    #15
-000010AE                           115  
-000010AE  4E75                     116          rts
-000010B0                           117  
-000010B0                           118  * Put program code here
-000010B0                           119  
-000010B0  FFFF FFFF                120      SIMHALT             ; halt simulator
-000010B4                           121  
-000010B4                           122  * Put variables and constants here
-000010B4                           123  
-000010B4                           124      END    START        ; last line of source
+00001030  103C 0002                 59      move.b      #2,D0
+00001034  4E4F                      60      trap        #15
+00001036                            61      
+00001036  4EB9 00001052             62      jsr ASCIItoHex
+0000103C                            63      
+0000103C                            64  GetEndAddress:
+0000103C  103C 000E                 65      move.b      #14,D0
+00001040  43F8 008F                 66      lea         InputMsg2,A1
+00001044  4E4F                      67      trap        #15
+00001046                            68      
+00001046  103C 0002                 69      move.b      #2,D0
+0000104A  4E4F                      70      trap        #15
+0000104C                            71      
+0000104C  4EB9 00001052             72      jsr         ASCIItoHex
+00001052                            73      
+00001052                            74  ASCIItoHex:
+00001052  4EB9 00001060             75          jsr     ASCII2Hex_init  
+00001058  4EB9 00001066             76          jsr     conversion_loop
+0000105E  4E75                      77          rts                    
+00001060                            78  
+00001060                            79  ASCII2Hex_init:   
+00001060  143C 0000                 80          move.b  #0,D2      
+00001064  4E75                      81          rts         
+00001066                            82          
+00001066                            83  conversion_loop:            
+00001066  5282                      84          add.l   #1,D2     
+00001068  B4BC 00000009             85          cmp.l   #9,D2 
+0000106E  6700 004A                 86          BEQ     DONE        
+00001072  1819                      87          move.b  (A1)+,D4    
+00001074                            88          
+00001074  B83C 0040                 89          cmp.b   #$40,D4        
+00001078  6E00 000C                 90          bgt     Letters_Cap  
+0000107C                            91          
+0000107C  B83C 0039                 92          cmp.b   #$39,D4
+00001080  6F00 0016                 93          BLE     Numbers      
+00001084  4E75                      94          rts
+00001086                            95          
+00001086                            96  Letters_Cap:      
+00001086  B83C 0046                 97          cmp.b   #$46,D4          
+0000108A  6E00 001E                 98          bgt     ERROR  
+0000108E  0404 0037                 99          sub.b   #$37,D4     
+00001092  E986                     100          asl.l   #4,D6       
+00001094  DC84                     101          add.l   D4,D6     
+00001096  60CE                     102          bra     conversion_loop 
+00001098                           103  Numbers:
+00001098  B83C 0030                104          cmp.b   #$30,D4         
+0000109C  6D00 000C                105          blt     ERROR        
+000010A0  0404 0030                106          sub.b   #$30,D4      
+000010A4  E986                     107          asl.l   #4,D6        
+000010A6  DC84                     108          add.l   D4,D6     
+000010A8  60BC                     109          bra     conversion_loop
+000010AA                           110          
+000010AA                           111  ERROR:
+000010AA  43F8 011E                112          lea     ErrorMsg,A1    
+000010AE  103C 000E                113          move.b  #14,D0
+000010B2  4E4F                     114          trap    #15
+000010B4                           115      
+000010B4  103C 0009                116          move.b  #9,D0
+000010B8  4E4F                     117          trap    #15
+000010BA                           118          
+000010BA                           119  DONE:
+000010BA                           120     
+000010BA  4241                     121          clr     D1
+000010BC  4242                     122          clr     D2
+000010BE  4244                     123          clr     D4
+000010C0                           124      
+000010C0  43F8 014F                125          lea     ASCIItoHexMsg,A1
+000010C4  103C 000E                126          move.b  #14,D0
+000010C8  4E4F                     127          trap    #15
+000010CA                           128  
+000010CA  4E75                     129          rts
+000010CC                           130  
+000010CC                           131  * Put program code here
+000010CC                           132  
+000010CC  FFFF FFFF                133      SIMHALT             ; halt simulator
+000010D0                           134  
+000010D0                           135  * Put variables and constants here
+000010D0                           136  
+000010D0                           137      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -134,27 +147,28 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-ASCII2HEX_INIT      1044
-ASCIITOHEX          1036
+ASCII2HEX_INIT      1060
+ASCIITOHEX          1052
 ASCIITOHEXMSG       14F
 CONTINUEORNOTMSG    1AF
-CONVERSION_LOOP     104A
+CONVERSION_LOOP     1066
 CR                  D
 CREATORS            1F
-DONE                109E
+DONE                10BA
 ENDADDRESSINC       E4
-ERROR               108E
+ERROR               10AA
 ERRORMSG            11E
 EXITMSG             1D2
-GETSTARTADDRESS     1020
+GETENDADDRESS       103C
+GETSTARTADDRESS     1026
 HELPMSG             173
 HEXTOASCIIMSG       12D
 INPUTISINC          C7
 INPUTMSG1           4E
 INPUTMSG2           8F
-LETTERS_CAP         106A
+LETTERS_CAP         1086
 LF                  A
 MENU                101A
-NUMBERS             107C
+NUMBERS             1098
 START               1000
 STARTINGMSG         0
