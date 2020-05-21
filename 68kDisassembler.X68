@@ -44,18 +44,19 @@ START:                  ; first instruction of program
     jsr         MENU
     
     
-    * ---------- END OF PROGRAM -------------
+* ---------- END OF PROGRAM -------------*
+
     move.b      #14,D0
     lea         ExitMsg,A1 
     trap        #15
     
     move.b      #9,D0
     trap        #15
-    * ---------------------------------------
+* ---------------------------------------*
     
-*---------- End of Beginning Messages ----------*
+*-- End of Opening and Ending Messages --*
 
-*---------- Start of I/O Section ----------*
+*--------- Start of I/O Section ---------*
 
 MENU:
     jsr         GetStartAddress
@@ -66,36 +67,35 @@ MENU:
     
 GetStartAddress:
     
-    move.b      #14, D0
+    move.b      #14, D0         *Display input message
     lea         InputMsg1,A1
     trap        #15
     
     move.b      #2,D0
     trap        #15
         
-    jsr ASCIItoHex
+    jsr ASCIItoHex              *conversion to Hex
     * Address Located in D6
-    movea.l     D6,A4
+    movea.l     D6,A4           *move into address register 4
     rts
     
     
 GetEndAddress:
-    move.b      #14,D0
+    move.b      #14,D0          *Display input message
     lea         InputMsg2,A1
     trap        #15
     
     move.b      #2,D0
     trap        #15
     
-    jsr         ASCIItoHex
-    * Address Located in D6
-    movea.l     D6,A5
+    jsr         ASCIItoHex      *conversion to hex
+    * Address Located in D6 (overwrite)
+    movea.l     D6,A5           *move into address register 5
     rts
     
 CheckAddress:
     
 MemSearch:
-    * Keep track of a counter for the loop
     jsr MemSearchLoop
     rts
     
@@ -131,7 +131,9 @@ OPCODE_DECODE:
     rts
 
     
-    
+
+* ----- Hex to ASCII & ASCII to HEX -----*
+
 ASCIItoHex:
         jsr     ASCII2Hex_init  
         jsr     conversion_loop
@@ -188,6 +190,8 @@ DONE:
         trap    #15
 
         rts
+        
+* -- End of Hex to ASCII & ASCII to HEX --*
 
 * Put program code here
 
