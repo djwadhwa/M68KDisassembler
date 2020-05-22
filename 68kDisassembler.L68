@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 5/21/2020 4:54:33 AM
+Created On: 5/22/2020 8:23:32 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :  68k Disassebler
@@ -48,150 +48,177 @@ Created On: 5/21/2020 4:54:33 AM
 00001014  4EB9 0000102A             44      jsr         MENU
 0000101A                            45      
 0000101A                            46      
-0000101A                            47      * ---------- END OF PROGRAM -------------
-0000101A  103C 000E                 48      move.b      #14,D0
-0000101E  43F8 01EF                 49      lea         ExitMsg,A1 
-00001022  4E4F                      50      trap        #15
-00001024                            51      
-00001024  103C 0009                 52      move.b      #9,D0
-00001028  4E4F                      53      trap        #15
-0000102A                            54      * ---------------------------------------
-0000102A                            55      
-0000102A                            56  *---------- End of Beginning Messages ----------*
-0000102A                            57  
-0000102A                            58  *---------- Start of I/O Section ----------*
-0000102A                            59  
-0000102A                            60  MENU:
-0000102A  4EB9 0000103E             61      jsr         GetStartAddress
-00001030  4EB9 00001058             62      jsr         GetEndAddress
-00001036                            63      
-00001036  4EB9 00001072             64      jsr         MemSearch
-0000103C  4E75                      65      rts
-0000103E                            66      
-0000103E                            67  GetStartAddress:
-0000103E                            68      
-0000103E  103C 000E                 69      move.b      #14, D0
-00001042  43F8 004E                 70      lea         InputMsg1,A1
-00001046  4E4F                      71      trap        #15
-00001048                            72      
-00001048  103C 0002                 73      move.b      #2,D0
-0000104C  4E4F                      74      trap        #15
-0000104E                            75          
-0000104E  4EB9 00001092             76      jsr ASCIItoHex
-00001054                            77      * Address Located in D6
-00001054  2846                      78      movea.l     D6,A4
-00001056  4E75                      79      rts
-00001058                            80      
-00001058                            81      
-00001058                            82  GetEndAddress:
-00001058  103C 000E                 83      move.b      #14,D0
-0000105C  43F8 008F                 84      lea         InputMsg2,A1
-00001060  4E4F                      85      trap        #15
-00001062                            86      
-00001062  103C 0002                 87      move.b      #2,D0
-00001066  4E4F                      88      trap        #15
-00001068                            89      
-00001068  4EB9 00001092             90      jsr         ASCIItoHex
-0000106E                            91      * Address Located in D6
-0000106E  2A46                      92      movea.l     D6,A5
-00001070  4E75                      93      rts
-00001072                            94      
-00001072                            95  CheckAddress:
-00001072                            96      
-00001072                            97  MemSearch:
-00001072                            98      * Keep track of a counter for the loop
-00001072  4EB9 0000107A             99      jsr MemSearchLoop
-00001078  4E75                     100      rts
-0000107A                           101      
-0000107A                           102  MemSearchLoop:
-0000107A                           103      
-0000107A                           104      * Check if we reached the end address
-0000107A  BBCC                     105      cmp.l       A4,A5
-0000107C  6700 0008                106      beq         MemSearch_Done
-00001080                           107      
-00001080                           108      * Get data from memory
-00001080  3014                     109      move.w     (A4),D0
-00001082                           110      
-00001082                           111      
-00001082                           112      
-00001082                           113      
-00001082  544C                     114      adda.w      #2,A4
-00001084  60F4                     115      bra         MemSearchLoop
-00001086                           116      
-00001086                           117      
-00001086                           118  MemSearch_Done:
-00001086  103C 000E                119      move.b      #14,D0
-0000108A  43F8 0173                120      lea         EndOfMemLoop,A1 
-0000108E  4E4F                     121      trap        #15
-00001090  4E75                     122      rts
-00001092                           123  
-00001092                           124      
-00001092                           125      
-00001092                           126      
-00001092                           127  ASCIItoHex:
-00001092  4EB9 000010A0            128          jsr     ASCII2Hex_init  
-00001098  4EB9 000010A6            129          jsr     conversion_loop
-0000109E  4E75                     130          rts                    
-000010A0                           131  
-000010A0                           132  ASCII2Hex_init:   
-000010A0  143C 0000                133          move.b  #0,D2      
-000010A4  4E75                     134          rts         
-000010A6                           135          
-000010A6                           136  conversion_loop:            
-000010A6  5282                     137          add.l   #1,D2     
-000010A8  B4BC 00000009            138          cmp.l   #9,D2 
-000010AE  6700 004A                139          BEQ     DONE        
-000010B2  1819                     140          move.b  (A1)+,D4    
-000010B4                           141          
-000010B4  B83C 0040                142          cmp.b   #$40,D4        
-000010B8  6E00 000C                143          bgt     Letters_Cap  
-000010BC                           144          
-000010BC  B83C 0039                145          cmp.b   #$39,D4
-000010C0  6F00 0016                146          BLE     Numbers      
-000010C4  4E75                     147          rts
-000010C6                           148          
-000010C6                           149  Letters_Cap:      
-000010C6  B83C 0046                150          cmp.b   #$46,D4          
-000010CA  6E00 001E                151          bgt     ERROR  
-000010CE  0404 0037                152          sub.b   #$37,D4     
-000010D2  E986                     153          asl.l   #4,D6       
-000010D4  DC84                     154          add.l   D4,D6     
-000010D6  60CE                     155          bra     conversion_loop 
-000010D8                           156  Numbers:
-000010D8  B83C 0030                157          cmp.b   #$30,D4         
-000010DC  6D00 000C                158          blt     ERROR        
-000010E0  0404 0030                159          sub.b   #$30,D4      
-000010E4  E986                     160          asl.l   #4,D6        
-000010E6  DC84                     161          add.l   D4,D6     
-000010E8  60BC                     162          bra     conversion_loop
-000010EA                           163          
-000010EA                           164  ERROR:
-000010EA  43F8 011E                165          lea     ErrorMsg,A1    
-000010EE  103C 000E                166          move.b  #14,D0
-000010F2  4E4F                     167          trap    #15
-000010F4                           168      
-000010F4  103C 0009                169          move.b  #9,D0
-000010F8  4E4F                     170          trap    #15
-000010FA                           171          
-000010FA                           172  DONE:
-000010FA                           173     
-000010FA  4241                     174          clr     D1
-000010FC  4242                     175          clr     D2
-000010FE  4244                     176          clr     D4
-00001100                           177      
-00001100  43F8 014F                178          lea     ASCIItoHexMsg,A1
-00001104  103C 000E                179          move.b  #14,D0
-00001108  4E4F                     180          trap    #15
-0000110A                           181  
-0000110A  4E75                     182          rts
-0000110C                           183  
-0000110C                           184  * Put program code here
-0000110C                           185  
-0000110C  FFFF FFFF                186      SIMHALT             ; halt simulator
-00001110                           187  
-00001110                           188  * Put variables and constants here
-00001110                           189  
-00001110                           190      END    START        ; last line of source
+0000101A                            47  * ---------- END OF PROGRAM -------------*
+0000101A                            48  
+0000101A  103C 000E                 49      move.b      #14,D0
+0000101E  43F8 01EF                 50      lea         ExitMsg,A1 
+00001022  4E4F                      51      trap        #15
+00001024                            52      
+00001024  103C 0009                 53      move.b      #9,D0
+00001028  4E4F                      54      trap        #15
+0000102A                            55  * ---------------------------------------*
+0000102A                            56      
+0000102A                            57  *-- End of Opening and Ending Messages --*
+0000102A                            58  
+0000102A                            59  *--------- Start of I/O Section ---------*
+0000102A                            60  
+0000102A                            61  MENU:
+0000102A  4EB9 00001044             62      jsr         GetStartAddress
+00001030  4EB9 0000105E             63      jsr         GetEndAddress
+00001036  4EB9 00001078             64      jsr         CheckAddress
+0000103C                            65      
+0000103C  4EB9 0000107E             66      jsr         MemSearch
+00001042  4E75                      67      rts
+00001044                            68      
+00001044                            69  GetStartAddress:
+00001044                            70      
+00001044  103C 000E                 71      move.b      #14, D0         *Display input message
+00001048  43F8 004E                 72      lea         InputMsg1,A1
+0000104C  4E4F                      73      trap        #15
+0000104E                            74      
+0000104E  103C 0002                 75      move.b      #2,D0
+00001052  4E4F                      76      trap        #15
+00001054                            77          
+00001054  4EB9 000010B2             78      jsr ASCIItoHex              *conversion to Hex
+0000105A                            79      * Address Located in D6
+0000105A  2846                      80      movea.l     D6,A4           *move into address register 4
+0000105C  4E75                      81      rts
+0000105E                            82      
+0000105E                            83      
+0000105E                            84  GetEndAddress:
+0000105E  103C 000E                 85      move.b      #14,D0          *Display input message
+00001062  43F8 008F                 86      lea         InputMsg2,A1
+00001066  4E4F                      87      trap        #15
+00001068                            88      
+00001068  103C 0002                 89      move.b      #2,D0
+0000106C  4E4F                      90      trap        #15
+0000106E                            91      
+0000106E  4EB9 000010B2             92      jsr         ASCIItoHex      *conversion to hex
+00001074                            93      * Address Located in D6 (overwrite)
+00001074  2A46                      94      movea.l     D6,A5           *move into address register 5
+00001076  4E75                      95      rts
+00001078                            96      
+00001078                            97  CheckAddress:
+00001078  BBCC                      98      cmp.l       A4,A5
+0000107A  67AE                      99      beq         Menu
+0000107C                           100      
+0000107C  4E75                     101      rts
+0000107E                           102      
+0000107E                           103  MemSearch:
+0000107E  4EB9 00001086            104      jsr MemSearchLoop
+00001084  4E75                     105      rts
+00001086                           106      
+00001086                           107  MemSearchLoop:
+00001086                           108      
+00001086                           109      * Check if we reached the end address
+00001086  BBCC                     110      cmp.l       A4,A5
+00001088  6700 000E                111      beq         MemSearch_Done
+0000108C                           112      
+0000108C                           113      * Get data from memory
+0000108C  3014                     114      move.w     (A4),D0
+0000108E                           115      * OPCODE Word Located in D0
+0000108E  4EB9 000010B0            116      jsr         OPCODE_DECODE
+00001094                           117          
+00001094                           118      
+00001094                           119      
+00001094                           120      
+00001094  544C                     121      adda.w      #2,A4
+00001096  60EE                     122      bra         MemSearchLoop
+00001098                           123      
+00001098                           124      
+00001098                           125  MemSearch_Done:
+00001098  103C 000E                126      move.b      #14,D0
+0000109C  43F8 0173                127      lea         EndOfMemLoop,A1 
+000010A0  4E4F                     128      trap        #15
+000010A2  4E75                     129      rts
+000010A4                           130      
+000010A4                           131  TerminateOrCont:
+000010A4                           132      * Used to check if user would like to terminate the program or continue to disassemble more data
+000010A4  103C 000E                133      move.b      #14,D0
+000010A8  43F8 01CC                134      lea         ContinueOrNotMsg,A1 
+000010AC  4E4F                     135      trap        #15
+000010AE                           136      
+000010AE  4E75                     137      rts 
+000010B0                           138  
+000010B0                           139  * -------- Start of Opcode Section -------*    
+000010B0                           140  
+000010B0                           141  OPCODE_DECODE:
+000010B0                           142      * Begin OPCODE Decoding here
+000010B0                           143      * Check first four bits and begin
+000010B0                           144      * if-branch breakdown
+000010B0  4E75                     145      rts
+000010B2                           146  
+000010B2                           147      
+000010B2                           148  * -------- End of Opcode Section --------*   
+000010B2                           149  
+000010B2                           150  * ----- Hex to ASCII & ASCII to HEX -----*
+000010B2                           151  
+000010B2                           152  ASCIItoHex:
+000010B2  4EB9 000010C0            153          jsr     ASCII2Hex_init  
+000010B8  4EB9 000010C6            154          jsr     conversion_loop
+000010BE  4E75                     155          rts                    
+000010C0                           156  
+000010C0                           157  ASCII2Hex_init:   
+000010C0  143C 0000                158          move.b  #0,D2      
+000010C4  4E75                     159          rts         
+000010C6                           160          
+000010C6                           161  conversion_loop:            
+000010C6  5282                     162          add.l   #1,D2     
+000010C8  B4BC 00000009            163          cmp.l   #9,D2 
+000010CE  6700 004A                164          BEQ     DONE        
+000010D2  1819                     165          move.b  (A1)+,D4    
+000010D4                           166          
+000010D4  B83C 0040                167          cmp.b   #$40,D4        
+000010D8  6E00 000C                168          bgt     Letters_Cap  
+000010DC                           169          
+000010DC  B83C 0039                170          cmp.b   #$39,D4
+000010E0  6F00 0016                171          BLE     Numbers      
+000010E4  4E75                     172          rts
+000010E6                           173          
+000010E6                           174  Letters_Cap:      
+000010E6  B83C 0046                175          cmp.b   #$46,D4          
+000010EA  6E00 001E                176          bgt     ERROR  
+000010EE  0404 0037                177          sub.b   #$37,D4     
+000010F2  E986                     178          asl.l   #4,D6       
+000010F4  DC84                     179          add.l   D4,D6     
+000010F6  60CE                     180          bra     conversion_loop 
+000010F8                           181  Numbers:
+000010F8  B83C 0030                182          cmp.b   #$30,D4         
+000010FC  6D00 000C                183          blt     ERROR        
+00001100  0404 0030                184          sub.b   #$30,D4      
+00001104  E986                     185          asl.l   #4,D6        
+00001106  DC84                     186          add.l   D4,D6     
+00001108  60BC                     187          bra     conversion_loop
+0000110A                           188          
+0000110A                           189  ERROR:
+0000110A  43F8 011E                190          lea     ErrorMsg,A1    
+0000110E  103C 000E                191          move.b  #14,D0
+00001112  4E4F                     192          trap    #15
+00001114                           193      
+00001114  103C 0009                194          move.b  #9,D0
+00001118  4E4F                     195          trap    #15
+0000111A                           196          
+0000111A                           197  DONE:
+0000111A                           198     
+0000111A  4241                     199          clr     D1
+0000111C  4242                     200          clr     D2
+0000111E  4244                     201          clr     D4
+00001120                           202      
+00001120  43F8 014F                203          lea     ASCIItoHexMsg,A1
+00001124  103C 000E                204          move.b  #14,D0
+00001128  4E4F                     205          trap    #15
+0000112A                           206  
+0000112A  4E75                     207          rts
+0000112C                           208          
+0000112C                           209  * -- End of Hex to ASCII & ASCII to HEX --*
+0000112C                           210  
+0000112C                           211  * Put program code here
+0000112C                           212  
+0000112C  FFFF FFFF                213      SIMHALT             ; halt simulator
+00001130                           214  
+00001130                           215  * Put variables and constants here
+00001130                           216  
+00001130                           217      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -200,35 +227,37 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-ASCII2HEX_INIT      10A0
-ASCIITOHEX          1092
+ASCII2HEX_INIT      10C0
+ASCIITOHEX          10B2
 ASCIITOHEXMSG       14F
-CHECKADDRESS        1072
+CHECKADDRESS        1078
 CONTINUEORNOTMSG    1CC
-CONVERSION_LOOP     10A6
+CONVERSION_LOOP     10C6
 CR                  D
 CREATORS            1F
-DONE                10FA
+DONE                111A
 ENDADDRESSINC       E4
 ENDOFMEMLOOP        173
 END_ADDR_BUFFER     300
-ERROR               10EA
+ERROR               110A
 ERRORMSG            11E
 EXITMSG             1EF
-GETENDADDRESS       1058
-GETSTARTADDRESS     103E
+GETENDADDRESS       105E
+GETSTARTADDRESS     1044
 HELPMSG             190
 HEXTOASCIIMSG       12D
 INPUTISINC          C7
 INPUTMSG1           4E
 INPUTMSG2           8F
-LETTERS_CAP         10C6
+LETTERS_CAP         10E6
 LF                  A
-MEMSEARCH           1072
-MEMSEARCHLOOP       107A
-MEMSEARCH_DONE      1086
+MEMSEARCH           107E
+MEMSEARCHLOOP       1086
+MEMSEARCH_DONE      1098
 MENU                102A
-NUMBERS             10D8
+NUMBERS             10F8
+OPCODE_DECODE       10B0
 START               1000
 STARTINGMSG         0
 START_ADDR_BUFFER   200
+TERMINATEORCONT     10A4

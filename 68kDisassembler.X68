@@ -61,6 +61,7 @@ START:                  ; first instruction of program
 MENU:
     jsr         GetStartAddress
     jsr         GetEndAddress
+    jsr         CheckAddress
     
     jsr         MemSearch
     rts
@@ -94,6 +95,10 @@ GetEndAddress:
     rts
     
 CheckAddress:
+    cmp.l       A4,A5
+    beq         Menu
+    
+    rts
     
 MemSearch:
     jsr MemSearchLoop
@@ -122,8 +127,17 @@ MemSearch_Done:
     lea         EndOfMemLoop,A1 
     trap        #15
     rts
-
     
+TerminateOrCont:
+    * Used to check if user would like to terminate the program or continue to disassemble more data
+    move.b      #14,D0
+    lea         ContinueOrNotMsg,A1 
+    trap        #15
+    
+    rts 
+
+* -------- Start of Opcode Section -------*    
+
 OPCODE_DECODE:
     * Begin OPCODE Decoding here
     * Check first four bits and begin
@@ -131,6 +145,7 @@ OPCODE_DECODE:
     rts
 
     
+* -------- End of Opcode Section --------*   
 
 * ----- Hex to ASCII & ASCII to HEX -----*
 
@@ -200,6 +215,7 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
