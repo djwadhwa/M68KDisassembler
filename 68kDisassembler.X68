@@ -58,7 +58,27 @@ START:                  ; first instruction of program
 
 *--------- Start of I/O Section ---------*
 
+Clear_Registers:
+    clr.l     D0
+    clr.l     D1
+    clr.l     D2
+    clr.l     D3
+    clr.l     D4
+    clr.l     D5
+    clr.l     D6
+    clr.l     D7
+    
+    movea.l   #0,A0
+    movea.l   #0,A1
+    movea.l   #0,A2
+    movea.l   #0,A3
+    movea.l   #0,A4
+    movea.l   #0,A5
+    movea.l   #0,A6
+    rts
+
 MENU:
+    jsr         Clear_Registers
     jsr         GetStartAddress
     jsr         GetEndAddress
     jsr         CheckAddress
@@ -97,8 +117,7 @@ GetEndAddress:
 CheckAddress:
     cmp.l       A4,A5
     beq         Menu
-    
-    rts
+
     
 MemSearch:
     jsr MemSearchLoop
