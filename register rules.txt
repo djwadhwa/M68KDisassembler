@@ -1,0 +1,15 @@
+D0, D1 - reserved for trap instructions, Do not store data
+D2 - opcode read (do not modify)
+D3 - opcode mutable (rotate, shift, etc.)
+D4 - opcode size 
+D5 - X
+D6 - X
+D7 - X
+
+A0 - X
+A1 - reserved for LEA/trap instructions
+A2 - X
+A3 - X
+A4 - current address
+A5 - end address
+A6 - X
