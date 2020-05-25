@@ -28,23 +28,30 @@ START_ADDR_BUFFER  DS.B    256
 END_ADDR_BUFFER    DS.B    256
 
 *size
-long 				DC.B 	'L ',0
-word 				DC.B 	'W ',0
-byte 				DC.B 	'B ',0
+long 				DC.B 	'.L ',0
+word 				DC.B 	'.W ',0
+byte 				DC.B 	'.B ',0
 
 *instructions
 nop_ins				DC.B 	'NOP',0
 rts_ins				DC.B 	'RTS',0
-move_ins			DC.B 	'MOVE.',0
-moveq_ins			DC.B 	'MOVEQ.',0
-movem_ins			DC.B 	'MOVEM.',0
-movea_ins			DC.B 	'MOVEA.',0
-add_ins				DC.B	'ADD.',0
-adda_ins			DC.B	'ADDA.',0
-addq_ins			DC.B	'ADDQ.',0
-or_ins				DC.B	'OR.',0
-and_ins				DC.B	'AND.',0
-sub_ins				DC.B	'SUB.',0
+move_ins			DC.B 	'MOVE',0
+moveq_ins			DC.B 	'MOVEQ',0
+movem_ins			DC.B 	'MOVEM',0
+movea_ins			DC.B 	'MOVEA',0
+add_ins				DC.B	'ADD',0
+adda_ins			DC.B	'ADDA',0
+addq_ins			DC.B	'ADDQ',0
+or_ins				DC.B	'OR',0
+and_ins				DC.B	'AND',0
+sub_ins				DC.B	'SUB',0
+ls_ins				DC.B	'LS',0
+as_ins				DC.B	'AS',0
+ro_ins				DC.B	'RO',0
+
+*direction
+right				DC.B	'R',0
+left				DC.B	'L',0
 
 *EA
 D_reg				DC.B	'D',0
@@ -53,7 +60,11 @@ open_paran			DC.B 	'(A',0
 close_paran			DC.B	')',0
 post_inc			DC.B	')+',0
 pre_dec				DC.B	'-(A',0
+
+*extra
+space 				DC.B	' ',0
 comma				DC.B	', ',0
+pound				DC.B	'#',0
 return				DC.B	CR,LF,0
 
     ORG    $1000    *Start at address $1000
@@ -70,6 +81,9 @@ START:                  ; first instruction of program
 	MOVE.W #$9822,$00009240 *SUB.B -(A2),D4
 	MOVE.W #$C246,$00009242 *AND.W D6,D1
 	MOVE.W #$8593,$00009244 *OR.L D2,(A3)
+	MOVE.W #$E0C7,$00009246 *ASR D7
+	MOVE.W #$ED4C,$00009248 *LSL.W #6, D4
+	MOVE.W #$E4BB,$0000924A *ROR.L D2, D3
 	
 *---------- END Test ----------*
 
@@ -228,6 +242,9 @@ OPCODE_DECODE:
 	CMP.W #$D000,D3
 	BEQ	print_add_adda		*check if value is ADD or ADDA
 	
+	CMP.W #$E000,D3
+	BEQ	print_ls_as_ro		*check if value is LSL, LSR, ASL, ASR, ROL, or ROR
+	
 	CMP.W #$1000,D2
 	BLT invalid
 	CMP.W #$4000, D2
@@ -294,8 +311,6 @@ print_add_adda
 	BEQ add_a
 	LEA add_ins, A1
 	JSR print
-	CLR D4
-	MOVE.B D3,D4
 	JSR size
 	MOVE.W D2,D3
 	AND.W #$0100, D3
@@ -304,9 +319,11 @@ print_add_adda
 	JSR addr 			*if Direction bit is 0
 	LEA comma, A1
 	JSR print
+	MOVE.W D2,D5
 	JSR data_reg_sr
 	BRA end_add
 ea_dest_add 			*if Direction bit is 1
+	MOVE.W D2,D5
 	JSR data_reg_sr
 	LEA comma, A1
 	JSR print
@@ -350,10 +367,6 @@ print_or
 	LEA or_ins, A1
 print_value
 	JSR print
-	MOVE.W D2, D3
-	AND.B #$C0, D3
-	CLR D4
-	MOVE.B D3,D4
 	JSR size
 	MOVE.W D2,D3
 	AND.W #$0100, D3
@@ -362,9 +375,11 @@ print_value
 	JSR addr 			*if Direction bit is 0
 	LEA comma, A1
 	JSR print
+	MOVE.W D2,D5
 	JSR data_reg_sr
 	BRA end_add
 ea_dest_sub_and_or		*if Direction bit is 1
+	MOVE.W D2,D5
 	JSR data_reg_sr
 	LEA comma, A1
 	JSR print
@@ -372,7 +387,89 @@ ea_dest_sub_and_or		*if Direction bit is 1
 	LEA return, A1
 	JSR print
 	BRA out
+	
+print_ls_as_ro					
+	MOVE.W D2, D3
+	AND.B #$C0, D3
+	CMP.B #$C0, D3
+	BEQ ls_as_ro_mem
+	MOVE.W D2, D3
+	LSR.B #3, D3
+	JSR print_correct_shift_rotation
+	JSR print_direction
+	JSR size
+	MOVE.W D2, D3
+	AND.B #$20,D3
+	CMP.B #$20, D3
+	BEQ ls_as_ro_reg
+	LEA pound, A1
+	JSR print
+	MOVE.W D2,D6
+	ROL.W #7,D6
+	AND.W #$0007, D6
+	JSR Xn
+	LEA comma, A1
+	JSR print
+	MOVE.W D2,D5
+	ROR.W #7,D5
+	JSR data_reg_sr
+	BRA next_ls_as_ro
+ls_as_ro_reg
+	MOVE.W D2,D5
+	JSR data_reg_sr
+	LEA comma, A1
+	JSR print
+	MOVE.W D2,D5
+	ROR.W #7,D5
+	JSR data_reg_sr
+	BRA next_ls_as_ro
+ls_as_ro_mem
+	MOVE.W D2, D3
+	ROL.W #7, D3
+	JSR print_correct_shift_rotation
+	MOVE.W D2,D3
+	JSR print_direction
+	LEA space, A1
+	JSR print
+	JSR addr
+next_ls_as_ro
+	LEA return, A1
+	JSR print
+	BRA out
+	
 
+
+print_direction:
+	AND.W #$0100, D3
+	CMP.W #$0100, D3
+	BEQ print_left
+	LEA right, A1
+	JSR print
+	BRA out
+print_left
+	LEA left, A1
+	JSR print
+	RTS
+	
+
+print_correct_shift_rotation:
+	AND.B #$03, D3
+	CMP.B #$00, D3
+	BEQ print_as
+	CMP.B #$01, D3
+	BEQ print_ls
+	CMP.B #$03, D3
+	LEA ro_ins, A1
+	JSR print
+	BRA out
+print_as
+	LEA as_ins, A1
+	JSR print
+	BRA out
+print_ls
+	LEA ls_ins, A1
+	JSR print
+	RTS
 * --------- End Print Instruction ----------*
 
 * ------- Instruction sizes ---------*
@@ -384,24 +481,27 @@ move_size:
 	BEQ print_w
 	CMP.W #$2000, D4
 	BEQ print_l
-out2	RTS
+	RTS
 	
 print_b
 	LEA byte, A1
 	JSR print
-	BRA out2
+	BRA out
 	
 print_w
 	LEA word, A1
 	JSR print
-	BRA out2
+	BRA out
 	
 print_l:
 	LEA long, A1
 	JSR print
-	BRA out2
+	BRA out
 
 size:
+	CLR D4
+	MOVE.B D2,D4
+	AND.B #$C0, D4
 	CMP.B #$00, D4
 	BEQ print_b
 	CMP.B #$40,D4
@@ -430,15 +530,14 @@ cont
 	BEQ post_increment
 	CMP.B #$20, D6
 	BEQ pre_decrement
-	BRA out3 *needs Immediate, Abs Long, and Abs Word
+	BRA out *needs Immediate, Abs Long, and Abs Word
 	
 destination
 	MOVE.W D5,D6
 	ROL.W #7,D5
 	LSR.W #3,D6
 	BRA cont
-	
-out3 RTS
+	RTS
 
 data_reg
 	MOVE.W D5,D6	
@@ -446,7 +545,7 @@ data_reg
 	LEA D_reg, A1	
 	JSR print
 	JSR Xn
-	BRA out3
+	BRA out
 
 add_reg
 	MOVE.W D5,D6	
@@ -454,7 +553,7 @@ add_reg
 	LEA A_reg, A1	
 	JSR print
 	JSR Xn
-	BRA out3
+	BRA out
 	
 add_indirect
 	MOVE.W D5,D6	
@@ -464,7 +563,7 @@ add_indirect
 	JSR Xn
 	LEA close_paran, A1	
 	JSR print
-	BRA out3
+	BRA out
 	
 post_increment
 	MOVE.W D5,D6	
@@ -474,7 +573,7 @@ post_increment
 	JSR Xn
 	LEA post_inc, A1	
 	JSR print
-	BRA out3
+	BRA out
 	
 pre_decrement
 	MOVE.W D5,D6	
@@ -484,7 +583,7 @@ pre_decrement
 	JSR Xn
 	LEA close_paran, A1	
 	JSR print
-	BRA out3
+	BRA out
 	
 Xn:
 	CLR D1
@@ -494,7 +593,8 @@ Xn:
 	RTS
 
 data_reg_sr:
-	MOVE.W D2,D6
+	CLR D6
+	MOVE.W D5,D6
 	ROL.W #7,D6
 	AND.B #$07, D6	
 	LEA D_reg, A1	
@@ -503,6 +603,7 @@ data_reg_sr:
 	RTS
 	
 add_reg_sr:
+	CLR D6
 	MOVE.W D2,D6
 	ROL.W #7,D6
 	AND.B #$07, D6	
