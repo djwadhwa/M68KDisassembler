@@ -4,7 +4,7 @@ D3 - opcode mutable (rotate, shift, etc.)
 D4 - opcode size 
 D5 - EA read
 D6 - EA mutable
-D7 - X
+D7 - EA (source or dest only for MOVE)
 
 A0 - X
 A1 - reserved for LEA/trap instructions
