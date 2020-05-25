@@ -2,8 +2,8 @@ D0, D1 - reserved for trap instructions, Do not store data
 D2 - opcode read (do not modify)
 D3 - opcode mutable (rotate, shift, etc.)
 D4 - opcode size 
-D5 - X
-D6 - X
+D5 - EA read
+D6 - EA mutable
 D7 - X
 
 A0 - X
