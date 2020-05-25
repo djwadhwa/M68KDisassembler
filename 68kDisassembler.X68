@@ -22,14 +22,51 @@ ASCIItoHexMsg       dc.b    'Completed ASCII to hex conversion',CR,LF,0
 EndOfMemLoop        dc.b    '-------End of mem loop----',CR,LF,0
 HelpMsg             dc.b    'Inputs must be in hexadecimal in this format --> FFFFFFFF',CR,LF,0
 ContinueOrNotMsg    dc.b    'Would you like to Contunue or quit',0
-ExitMsg             dc.b    'Exitting Program',0
+ExitMsg             dc.b    'Exiting Program',0
 
 START_ADDR_BUFFER  DS.B    256
 END_ADDR_BUFFER    DS.B    256
 
+*size
+long 				DC.B 	'L ',0
+word 				DC.B 	'W ',0
+byte 				DC.B 	'B ',0
+
+*instructions
+nop_ins				DC.B 	'NOP',0
+rts_ins				DC.B 	'RTS',0
+move_ins			DC.B 	'MOVE.',0
+moveq_ins			DC.B 	'MOVEQ.',0
+movem_ins			DC.B 	'MOVEM.',0
+movea_ins			DC.B 	'MOVEA.',0
+add_ins				DC.B	'ADD.',0
+adda_ins			DC.B	'ADDA.',0
+addq_ins			DC.B	'ADDQ.',0
+
+*EA
+D_reg				DC.B	'D',0
+A_reg				DC.B 	'A',0
+open_paran			DC.B 	'(A',0
+close_paran			DC.B	')',0
+post_inc			DC.B	')+',0
+pre_dec				DC.B	'-(A',0
+comma				DC.B	', ',0
+return				DC.B	CR,LF,0
 
     ORG    $1000    *Start at address $1000
 START:                  ; first instruction of program
+
+*---------- Test values, will remove in final build ----------*
+
+	Move.W #$4E75,$00009234
+	MOVE.W #$3C05,$00009236
+	MOVE.W #$2447,$00009238
+	MOVE.W #$4E71,$0000923A
+	MOVE.W #$D95C,$0000923C
+	
+*---------- END Test ----------*
+
+
 
 *---------- Beginning Messages ----------*
     
@@ -130,8 +167,9 @@ MemSearchLoop:
     beq         MemSearch_Done
     
     * Get data from memory
-    move.w     (A4),D0
-    * OPCODE Word Located in D0
+    move.w     (A4),D2
+    move.w		D2, D3	mutable copy in D3
+    * OPCODE Word Located in D2, mutable copy in D3
     jsr         OPCODE_DECODE
         
     
@@ -161,10 +199,246 @@ OPCODE_DECODE:
     * Begin OPCODE Decoding here
     * Check first four bits and begin
     * if-branch breakdown
-    rts
+    CLR D4
+    CLR D5
+    CLR D6
+    CLR D7
+    MOVE.W D2,D5
+    MOVE.W D2,D6
+    
+	CMP.W #$4E71, D2		*check if value is NOP
+	BEQ print_nop
+	
+	CMP.W #$4E75, D2		*check if value is RTS
+	BEQ print_rts
+	
+	AND.W #$F000,D3
+	CMP.W #$D000,D3
+	BEQ	print_add_adda
+	
+	CMP.W #$1000,D2
+	BLT invalid
+	CMP.W #$4000, D2
+	BLT print_move_movea 	*check if value is MOVE or MOVEA
+	
+
+	
+invalid CLR D0    *need to add stuff to this
+	
+out	rts
 
     
 * -------- End of Opcode Section --------*   
+
+* --------- Print Instruction ----------*
+
+print:
+	CLR D0 
+	MOVE.B #14,D0
+	TRAP #15
+	RTS
+
+println:
+	MOVE.B #13, D0
+	TRAP #15
+	RTS
+	
+print_nop
+	LEA nop_ins, A1
+	JSR println
+	BRA out
+
+print_rts
+	LEA rts_ins, A1
+	JSR println
+	BRA out
+
+print_move_movea
+	LSR.W #6, D3
+	AND.B #$3, D3
+	CMP.B #1, D3
+	BEQ move_a
+	LEA move_ins, A1
+	JSR print
+	BRA m_size
+move_a LEA movea_ins, A1
+	JSR print
+m_size 
+	MOVE.W D2, D4
+	AND.W #$3000, D4
+	JSR move_size
+	JSR addr
+	LEA comma, A1
+	JSR print
+	MOVE.B #1, D7
+	JSR addr
+	LEA return, A1
+	JSR print
+	BRA out
+	
+print_add_adda
+	MOVE.B D2, D3
+	AND.B #$C0, D3
+	CMP.B #$C0, D3
+	BEQ add_a
+	LEA add_ins, A1
+	JSR print
+	CLR D4
+	MOVE.B D3,D4
+	JSR size
+	MOVE.B D2,D3
+	AND.W #$0100, D3
+	CMP.W #$0100, D3
+	BEQ ea_dest
+	JSR addr
+	LEA comma, A1
+	JSR print
+	JSR data_reg_sr
+	BRA end_add
+ea_dest
+	JSR data_reg_sr
+	LEA comma, A1
+	JSR print
+	JSR addr
+	BRA end_add
+add_a
+
+
+
+end_add 
+	LEA return, A1
+	JSR print
+	BRA out
+
+
+* --------- End Print Instruction ----------*
+
+* ------- Instruction sizes ---------*
+
+move_size:
+	CMP.W #$1000, D4
+	BEQ print_b
+	CMP.W #$3000, D4
+	BEQ print_w
+	CMP.W #$2000, D4
+	BEQ print_l
+out2	RTS
+	
+print_b
+	LEA byte, A1
+	JSR print
+	BRA out2
+	
+print_w
+	LEA word, A1
+	JSR print
+	BRA out2
+	
+print_l:
+	LEA long, A1
+	JSR print
+	BRA out2
+
+size:
+	CMP.B #$00, D4
+	BEQ print_b
+	CMP.B #$40,D4
+	BEQ print_w
+	CMP.B #$80, D4
+	BEQ print_l
+	RTS
+	
+* ------- End Instruction sizes ---------*
+
+* ------- Effective Address -------*
+addr:				
+	CMP.B #1, D7
+	BEQ destination
+cont
+	AND.B #$38, D6
+	CMP.B #0, D6
+	BEQ data_reg
+	CMP.B #$08, D6
+	BEQ add_reg
+	CMP.B #$10, D6
+	BEQ add_indirect
+	CMP.B #$18, D6
+	BEQ post_increment
+	CMP.B #$20, D6
+	BEQ pre_decrement
+	BRA out3 *needs Immediate, Abs Long, and Abs Word
+	
+destination
+	MOVE.W D5,D6
+	ROL.W #7,D5
+	LSR.W #3,D6
+	BRA cont
+	
+out3 RTS
+
+data_reg
+	MOVE.W D5,D6	
+	AND.B #$07, D6	
+	LEA D_reg, A1	
+	JSR print
+	JSR Xn
+	BRA out3
+
+add_reg
+	MOVE.W D5,D6	
+	AND.B #$07, D6
+	LEA A_reg, A1	
+	JSR print
+	JSR Xn
+	BRA out3
+	
+add_indirect
+	MOVE.W D5,D6	
+	AND.B #$07, D6
+	LEA open_paran, A1	
+	JSR print
+	JSR Xn
+	LEA close_paran, A1	
+	JSR print
+	BRA out3
+	
+post_increment
+	MOVE.W D5,D6	
+	AND.B #$07, D6
+	LEA open_paran, A1	
+	JSR print
+	JSR Xn
+	LEA post_inc, A1	
+	JSR print
+	BRA out3
+	
+pre_decrement
+	MOVE.W D5,D6	
+	AND.B #$07, D6
+	LEA pre_dec, A1	
+	JSR print
+	JSR Xn
+	LEA close_paran, A1	
+	JSR print
+	BRA out3
+	
+Xn:
+	CLR D1
+	MOVE.B D6,D1
+	MOVE.B #3, D0
+	TRAP #15
+	RTS
+
+data_reg_sr:
+	ROL.W #7,D6
+	AND.B #$07, D6	
+	LEA D_reg, A1	
+	JSR print
+	JSR Xn
+	RTS
+
+
+* ------- End Effective Address -------*
 
 * ----- Hex to ASCII & ASCII to HEX -----*
 
@@ -234,6 +508,8 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
+
+
 
 
 
