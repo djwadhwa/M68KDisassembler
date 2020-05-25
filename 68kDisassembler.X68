@@ -425,6 +425,10 @@ ls_as_ro_reg
 	BRA next_ls_as_ro
 ls_as_ro_mem
 	MOVE.W D2, D3
+	AND.B #$3F, D3
+	CMP.B #$3C, D3
+	BEQ invalid 	*ROL #4 <- not allowed (immediate addressing)
+	MOVE.W D2, D3
 	ROL.W #7, D3
 	JSR print_correct_shift_rotation
 	MOVE.W D2,D3
