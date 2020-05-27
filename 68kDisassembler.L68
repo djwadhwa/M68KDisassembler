@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 5/27/2020 3:39:16 AM
+Created On: 5/27/2020 4:32:27 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :  68k Disassebler
@@ -630,14 +630,14 @@ Created On: 5/27/2020 3:39:16 AM
 000015C6  4E75                     626          rts                    
 000015C8                           627  
 000015C8                           628  ASCII2Hex_init:   
-000015C8  143C 0000                629          move.b  #0,D2      
+000015C8  143C 0000                629          move.b  #0,D2       *set up counter    
 000015CC  4E75                     630          rts         
 000015CE                           631          
 000015CE                           632  conversion_loop:            
-000015CE  5282                     633          add.l   #1,D2     
-000015D0  B4BC 00000009            634          cmp.l   #9,D2 
-000015D6  6700 004A                635          BEQ     DONE        
-000015DA  1819                     636          move.b  (A1)+,D4    
+000015CE  5282                     633          add.l   #1,D2       *increment counter
+000015D0  B4BC 00000009            634          cmp.l   #9,D2       *ends at 9
+000015D6  6700 004A                635          BEQ     DONE        *branch when compare is true
+000015DA  1819                     636          move.b  (A1)+,D4    *Get first num
 000015DC                           637          
 000015DC  B83C 0040                638          cmp.b   #$40,D4        
 000015E0  6E00 000C                639          bgt     Letters_Cap  
@@ -681,15 +681,17 @@ Created On: 5/27/2020 3:39:16 AM
 00001632                           677  
 00001632  4E75                     678          rts
 00001634                           679          
-00001634                           680  * -- End of Hex to ASCII & ASCII to HEX --*
-00001634                           681  
-00001634                           682  * Put program code here
+00001634                           680  
+00001634                           681          
+00001634                           682  * -- End of Hex to ASCII & ASCII to HEX --*
 00001634                           683  
-00001634  FFFF FFFF                684      SIMHALT             ; halt simulator
-00001638                           685  
-00001638                           686  * Put variables and constants here
+00001634                           684  * Put program code here
+00001634                           685  
+00001634  FFFF FFFF                686      SIMHALT             ; halt simulator
 00001638                           687  
-00001638                           688      END    START        ; last line of source
+00001638                           688  * Put variables and constants here
+00001638                           689  
+00001638                           690      END    START        ; last line of source
 
 No errors detected
 No warnings generated

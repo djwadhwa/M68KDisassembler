@@ -626,14 +626,14 @@ ASCIItoHex:
         rts                    
 
 ASCII2Hex_init:   
-        move.b  #0,D2      
+        move.b  #0,D2       *set up counter    
         rts         
         
 conversion_loop:            
-        add.l   #1,D2     
-        cmp.l   #9,D2 
-        BEQ     DONE        
-        move.b  (A1)+,D4    
+        add.l   #1,D2       *increment counter
+        cmp.l   #9,D2       *ends at 9
+        BEQ     DONE        *branch when compare is true
+        move.b  (A1)+,D4    *Get first num
         
         cmp.b   #$40,D4        
         bgt     Letters_Cap  
@@ -677,6 +677,8 @@ DONE:
 
         rts
         
+
+        
 * -- End of Hex to ASCII & ASCII to HEX --*
 
 * Put program code here
@@ -686,6 +688,7 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
