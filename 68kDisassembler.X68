@@ -65,6 +65,7 @@ pre_dec				DC.B	'-(A',0
 space 				DC.B	' ',0
 comma				DC.B	', ',0
 pound				DC.B	'#',0
+tab                 EQU     $9
 return				DC.B	CR,LF,0
 
     ORG    $1000    *Start at address $1000
@@ -228,6 +229,7 @@ OPCODE_DECODE:
 	CMP.W #$4E75, D2		
 	BEQ print_rts			*check if value is RTS
 	
+	* Mask out only the first 4 bits
 	AND.W #$F000,D3
 	
 	CMP.W #$9000,D3
@@ -250,6 +252,9 @@ OPCODE_DECODE:
 	CMP.W #$4000, D2
 	BLT print_move_movea 	*check if value is MOVE or MOVEA
 	
+	CMP.W   #$7000,D3
+	BEQ     print_moveq
+	
 	
 invalid CLR D0    *need to add stuff to this
 	
@@ -259,6 +264,56 @@ out	rts
 * -------- End of Opcode Section --------*   
 
 * --------- Print Instruction ----------*
+
+print_moveq:
+    * now write that it is moveq
+    lea     moveq_ins,A1
+    move.b  #14,D0
+    trap    #15
+    
+    move.b  #tab,D1
+    move.b  #6,D0
+    trap    #15
+    
+    * Figure out the immediate data
+    
+    move.w  D2,D3
+    and.w   #$00FF,D3
+    
+    lea     pound,A1
+    move.b  #14,D0
+    trap    #15
+    
+    move.b  #3,D0
+    move.w  D3,D1
+    trap    #15
+
+    lea     comma,A1
+    move.b  #14,D0
+    trap    #15
+    
+    move.w  D2,D3
+    and.w   #%0000111000000000,D3
+    move.b  #9,D0
+    lsr.l   D0,D3
+    
+    move.b  #'D',D1
+    move.b  #6,D0
+    trap    #15
+    
+    move.b  #3,D0
+    move.w  D3,D1
+    trap    #15
+    
+    lea     return,A1
+    move.b  #14,D0
+    trap    #15
+    
+    jsr println
+    
+        
+    rts
+
 
 print:
 	CLR D0 
@@ -289,7 +344,8 @@ print_move_movea
 	LEA move_ins, A1
 	JSR print
 	BRA m_size
-move_a LEA movea_ins, A1
+move_a 
+    LEA movea_ins, A1
 	JSR print
 m_size 
 	MOVE.W D2, D4
@@ -688,6 +744,7 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 

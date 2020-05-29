@@ -1,6 +1,6 @@
 00006000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 5/21/2020 4:54:43 AM
+Created On: 5/29/2020 3:27:25 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :
@@ -12,17 +12,17 @@ Created On: 5/21/2020 4:54:43 AM
 00006000                             8  START:                  ; first instruction of program
 00006000                             9  
 00006000                            10  * Put program code here
-00006000                            11  
-00006000  5602                      12      add.b   #3,D2
-00006002  5800                      13      addi.b  #4,D0
-00006004  1E3C 0005                 14      move.b  #5,D7
-00006008                            15      
-00006008                            16  
-00006008  FFFF FFFF                 17      SIMHALT             ; halt simulator
-0000600C                            18  
-0000600C                            19  * Put variables and constants here
-0000600C                            20  
-0000600C                            21      END    START        ; last line of source
+00006000  70FD                      11      moveq   #253,D0
+00006002  1E3C 0005                 12      move.b  #5,D7
+00006006                            13      
+00006006                            14      
+00006006                            15      
+00006006                            16  
+00006006  FFFF FFFF                 17      SIMHALT             ; halt simulator
+0000600A                            18  
+0000600A                            19  * Put variables and constants here
+0000600A                            20  
+0000600A                            21      END    START        ; last line of source
 
 No errors detected
 No warnings generated

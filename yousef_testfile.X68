@@ -8,10 +8,10 @@
 START:                  ; first instruction of program
 
 * Put program code here
-
-    add.b   #3,D2
-    addi.b  #4,D0
+    moveq   #253,D0
     move.b  #5,D7
+    
+    
     
 
     SIMHALT             ; halt simulator
@@ -19,6 +19,7 @@ START:                  ; first instruction of program
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 *~Font name~Courier New~
 *~Font size~10~
