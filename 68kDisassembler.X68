@@ -52,6 +52,10 @@ not_ins				DC.B	'NOT',0
 jsr_ins				DC.B	'JSR ',0
 lea_ins				DC.B	'LEA ',0
 andq_ins			DC.B	'ADDQ',0
+bgt_ins				DC.B	'BGT',0
+ble_ins				DC.B	'BLE',0
+beq_ins				DC.B	'BEQ',0
+bra_ins				DC.B	'BRA',0
 
 *direction
 right				DC.B	'R',0
@@ -102,7 +106,14 @@ START:                  ; first instruction of program
 	MOVE.L #$00009208,$00009260
 	MOVE.W #$4E90,$00009264 *JSR (A0)
 	MOVE.W #$41D0,$00009266 *LEA (A0), A0 
-	MOVE.W #$5E14,$00009268 *ADDq.B #7, (A4)        
+	MOVE.W #$5E14,$00009268 *ADDQ.B #7, (A4)
+    MOVE.W #$6EFE,$0000926A *BGT.B FE
+    MOVE.W #$6F00,$0000926C *BLE.W FE7A
+    MOVE.W #$FE7A,$0000926E
+    MOVE.W #$6700,$00009270 *BEQ.W FE60
+    MOVE.W #$FE60,$00009272
+    MOVE.W #$4EB9,$00009274 *JSR 00009208
+    MOVE.L #$00009208,$000009276
 *---------- END Test ----------*
 
 
@@ -260,6 +271,9 @@ OPCODE_DECODE:
 	CMP.W #$9000,D3
 	BEQ print_sub_and_or	*check if value is SUB
 	
+	CMP.W #$6000,D3
+	BEQ print_bra_bcc		*check if value is BRA, BEQ, BGT, or BLE
+	
 	CMP.W #$8000, D3
 	BEQ print_sub_and_or	*check if value is OR
 
@@ -272,8 +286,8 @@ OPCODE_DECODE:
 	CMP.W #$E000,D3
 	BEQ	print_ls_as_ro		*check if value is LSL, LSR, ASL, ASR, ROL, or ROR
 	
-	CMP.W   #$7000,D3
-	BEQ     print_moveq		*check if value is MOVEQ
+	CMP.W #$7000,D3
+	BEQ print_moveq		*check if value is MOVEQ
 	
 	CMP.W #$1000,D2
 	BLT invalid
@@ -522,7 +536,7 @@ next_ls_as_ro
 	BRA out
 	
 print_not
-	LEA not_ins, A1
+	LEA not_ins, A1	*print instruction
 	JSR print
 	JSR size
 	MOVE.W D2, D3
@@ -534,37 +548,98 @@ print_not
 	BRA out
 
 print_jsr
-	LEA jsr_ins, A1
+	LEA jsr_ins, A1 *print instruction
 	JSR print
-	JSR addr
-	JSR enter
+	JSR addr	*print address
+	JSR enter	*print enter (next line)
 	BRA out
 
 print_lea
-	LEA lea_ins, A1
+	LEA lea_ins, A1 *print instruction
+	JSR print	
+	JSR addr	*print address
+	LEA comma, A1	*print comma
 	JSR print
-	JSR addr
-	LEA comma, A1
-	JSR print
-	JSR add_reg_sr
+	JSR add_reg_sr *print destination address register
 	JSR enter
 	BRA out
 
 print_addq
-	LEA addq_ins, A1
+	LEA addq_ins, A1	*print instruction
 	JSR print
-	JSR size
+	JSR size			*print instruction size
 	LEA pound, A1
-	JSR print
+	JSR print			*print '#' for immediate addressing
 	MOVE.W D2,D6
-	ROL.W #7,D6
+	ROL.W #7,D6			*appropriately rotate opcode to allow for sub-routine reuse
 	AND.W #$0007, D6
 	JSR Xn
-	LEA comma, A1
+	LEA comma, A1		*print comma
 	JSR print
-	JSR addr
+	JSR addr			*print destination address
 	JSR enter
 	BRA out
+
+print_bra_bcc
+	MOVE.W D2,D3
+	AND.W #$0F00, D3
+	CMP.W #$0000, D3
+	BEQ print_bra
+	CMP.W #$0700, D3
+	BEQ print_beq
+	CMP.W #$0E00, D3
+	BEQ print_bgt
+	CMP.W #$0F00, D3
+	BEQ print_ble
+	BRA invalid
+print_bra
+	LEA bra_ins, A1
+	JSR print
+	BRA next_bra_bcc
+print_beq
+	LEA beq_ins, A1
+	JSR print
+	BRA next_bra_bcc
+print_ble
+	LEA ble_ins, A1
+	JSR print
+	BRA next_bra_bcc
+print_bgt
+	LEA bgt_ins, A1
+	JSR print
+next_bra_bcc
+	MOVE.W D2, D3
+	AND.W #$00FF, D3
+	CMP.W #$0000, D3
+	BEQ check_word
+	LEA byte, A1
+	JSR print
+	LEA dollar, A1
+    JSR print
+    MOVE.W D3, D1
+    MOVE.W D2, D3
+    MOVE.W #16, D2
+    MOVE.W #15,D0
+    trap #15			*print immediate address value
+	MOVE.W D3, D2
+	BRA end_bra_bcc
+check_word
+	LEA word, A1
+	JSR print
+	LEA dollar, A1
+    JSR print
+	ADDA.W #2,A4		*update current address
+	MOVE.W (A4),D1		*retrieve word data stored in the new current address
+	MOVE.W D2, D3		*temporarily copy OPCODE to register D3
+	MOVE.W #16, D2		*store #16 to allow for use of base 16 output
+	MOVE.B #15, D0		*use trap instruction that allows use of base 16
+	TRAP #15
+	MOVE.W D3,D2		*copy opcode back to register D2
+end_bra_bcc
+	JSR enter
+	BRA out
+
+	
 
 print_direction:
 *print correct direction given direction bit
@@ -601,7 +676,7 @@ print_it
 
 * ------- Instruction sizes ---------*
 
-move_size: *print size for MOVE and MOVEA instruction
+move_size: 	*print size for MOVE and MOVEA instruction
 	CLR.L D4
 	MOVE.W D2, D4
 	AND.W #$3000, D4
@@ -613,22 +688,22 @@ move_size: *print size for MOVE and MOVEA instruction
 	BEQ print_l
 	RTS
 	
-print_b
+print_b		*print '.B'
 	LEA byte, A1
 	JSR print
 	BRA out
 	
-print_w
+print_w		*print '.W'
 	LEA word, A1
 	JSR print
 	BRA out
 	
-print_l:
+print_l:	*print '.L'
 	LEA long, A1
 	JSR print
 	BRA out
 
-size: *print size for pretty much any other instruction
+size: 		*print size for non "move" instructions
 	CLR.L D4
 	MOVE.B D2,D4
 	AND.B #$C0, D4
@@ -651,15 +726,15 @@ addr:			*use if dealing with Mode, Xn (source) or Xn, Mode (destination, set D7 
 cont
 	AND.B #$38, D6
 	CMP.B #0, D6
-	BEQ data_reg
+	BEQ data_reg		*check if EA mode is data register
 	CMP.B #$08, D6
-	BEQ add_reg
+	BEQ add_reg			*check if EA mode is address register
 	CMP.B #$10, D6
-	BEQ add_indirect
+	BEQ add_indirect	*check if EA mode is address indirect
 	CMP.B #$18, D6
-	BEQ post_increment
+	BEQ post_increment	*check if EA mode is post increment
 	CMP.B #$20, D6
-	BEQ pre_decrement
+	BEQ pre_decrement	*check if EA mode is pre_decrement
 	CMP.B #$38, D6
 	BEQ absolute_or_immediate
 	BRA out *needs Immediate, Abs Long, and Abs Word
@@ -729,13 +804,13 @@ absolute_or_immediate *check if EA is immediate or absolute address
 immediate
 	LEA pound, A1
 	JSR print
-	CMP.L #$4000, D2
+	CMP.L #$4000, D2	*using CMP.L to avoid sign extention for value in D2 caused previously by CMP.W
 	BLT move_movea		*check if instruction is move or movea
 	CMP.B #$40, D4		*if not move or movea
 	BLT w_imm			*byte and word check the next 2 addresses in mem
 	CMP.B #$80, D4
 	BEQ l_imm			*long checks the next 4 addresses in mem
-move_movea
+move_movea				*similar comparisons, but for different bits in OPCODE
 	CMP.W #$1000, D4
 	BEQ w_imm
 	CMP.W #$3000, D4
@@ -746,31 +821,31 @@ imm_complete
 	BRA out
 	
 w_imm
-	LEA dollar, A1
+	LEA dollar, A1		*print '$'
 	JSR print
-	ADDA.W #2,A4
-	MOVE.W (A4),D1
-	MOVE.W D2, D3
-	MOVE.W #16, D2
-	MOVE.B #15, D0
+	ADDA.W #2,A4		*update current address
+	MOVE.W (A4),D1		*retrieve word data stored in the new current address
+	MOVE.W D2, D3		*temporarily copy OPCODE to register D3
+	MOVE.W #16, D2		*store #16 to allow for use of base 16 output
+	MOVE.B #15, D0		*use trap instruction that allows use of base 16
 	TRAP #15
-	MOVE.W D3,D2
-	BRA imm_complete
+	MOVE.W D3,D2		*copy opcode back to register D2
+	BRA imm_complete	*exit addr subroutine
 	
 l_imm
-	LEA dollar, A1
+	LEA dollar, A1		*print '$'
 	JSR print
-	ADDA.W  #2,A4
-	MOVE.L (A4),D1
+	ADDA.W  #2,A4		*update current address
+	MOVE.L (A4),D1		*retrieve long data stored in the new current address
 	MOVE.W D2, D3
 	MOVE.W #16, D2
 	MOVE.B #15, D0
 	TRAP #15
 	MOVE.W D3,D2
-	ADD.W  #2,A4
-	BRA imm_complete
+	ADD.W  #2,A4		*update current address again since 2 more address were occupied by long data
+	BRA imm_complete	*exit addr subroutine
 
-Xn:
+Xn:						*retieve signed decimal value of data stored in register D6
 	CLR.L D1
 	MOVE.B D6,D1
 	MOVE.B #3, D0
@@ -869,6 +944,7 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
