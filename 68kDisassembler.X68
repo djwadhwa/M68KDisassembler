@@ -50,7 +50,7 @@ as_ins				DC.B	'AS',0
 ro_ins				DC.B	'RO',0
 not_ins				DC.B	'NOT',0
 jsr_ins				DC.B	'JSR ',0
-lea_ins				DC.B	'LEA',0
+lea_ins				DC.B	'LEA ',0
 andq_ins			DC.B	'ADDQ',0
 
 *direction
@@ -95,12 +95,14 @@ START:                  ; first instruction of program
 	MOVE.W #$000C,$00009250
 	MOVE.W #$2C3C,$00009252	*MOVE.L #$12345678, D6
 	MOVE.L #$12345678,$00009254
-	MOVE.W #$D4F8,$00009258	*ADDA.W $12,A2
+	MOVE.W #$D4F8,$00009258	*ADDA.W $12, A2
 	MOVE.W #$0012,$0000925A
 	MOVE.W #$4607,$0000925C	*NOT.B D7
-	MOVE.W #$4EB9,$0000925E *JSR 00009208
+	MOVE.W #$4EB9,$0000925E *JSR $9208
 	MOVE.L #$00009208,$00009260
-	MOVE.W #$4E90,$00009264 *JSR (A0)             
+	MOVE.W #$4E90,$00009264 *JSR (A0)
+	MOVE.W #$41D0,$00009266 *LEA (A0), A0 
+	MOVE.W #$5E14,$00009268 *ADDq.B #7, (A4)        
 *---------- END Test ----------*
 
 
@@ -291,6 +293,9 @@ OPCODE_DECODE:
  	* Mask out only the first 4 bits and the 8th bit
  	MOVE.W D2,D3
  	AND.W #$F100, D3
+ 	
+ 	CMP.W #$4100, D3
+ 	BEQ print_lea			*check if value is LEA
  	
  	CMP.W #$5000,D3
 	BEQ print_addq			*check if value is ANDQ 	
@@ -523,7 +528,7 @@ print_not
 	MOVE.W D2, D3
 	AND.B #$3F, D3
 	CMP.B #$3C, D3
-	BEQ invalid 	*ROL #4 <- not allowed (immediate addressing)
+	BEQ invalid 	*NOT #4 <- not allowed (immediate addressing)
 	JSR addr
 	JSR enter
 	BRA out
@@ -536,8 +541,30 @@ print_jsr
 	BRA out
 
 print_lea
+	LEA lea_ins, A1
+	JSR print
+	JSR addr
+	LEA comma, A1
+	JSR print
+	JSR add_reg_sr
+	JSR enter
+	BRA out
 
 print_addq
+	LEA addq_ins, A1
+	JSR print
+	JSR size
+	LEA pound, A1
+	JSR print
+	MOVE.W D2,D6
+	ROL.W #7,D6
+	AND.W #$0007, D6
+	JSR Xn
+	LEA comma, A1
+	JSR print
+	JSR addr
+	JSR enter
+	BRA out
 
 print_direction:
 *print correct direction given direction bit
