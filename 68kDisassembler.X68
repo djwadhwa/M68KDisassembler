@@ -36,7 +36,7 @@ byte 				DC.B 	'.B ',0
 nop_ins				DC.B 	'NOP',0
 rts_ins				DC.B 	'RTS',0
 move_ins			DC.B 	'MOVE',0
-moveq_ins			DC.B 	'MOVEQ',0
+moveq_ins			DC.B 	'MOVEQ ',0
 movem_ins			DC.B 	'MOVEM',0
 movea_ins			DC.B 	'MOVEA',0
 add_ins				DC.B	'ADD',0
@@ -48,6 +48,10 @@ sub_ins				DC.B	'SUB',0
 ls_ins				DC.B	'LS',0
 as_ins				DC.B	'AS',0
 ro_ins				DC.B	'RO',0
+not_ins				DC.B	'NOT',0
+jsr_ins				DC.B	'JSR ',0
+lea_ins				DC.B	'LEA',0
+andq_ins			DC.B	'ADDQ',0
 
 *direction
 right				DC.B	'R',0
@@ -67,7 +71,8 @@ comma				DC.B	', ',0
 pound				DC.B	'#',0
 tab                 EQU     $9
 return				DC.B	CR,LF,0
-
+data				DC.B	'DATA $',0
+dollar				DC.B 	'$',0
     ORG    $1000    *Start at address $1000
 START:                  ; first instruction of program
 
@@ -75,7 +80,7 @@ START:                  ; first instruction of program
 
 	Move.W #$4E75,$00009234 *RTS
 	MOVE.W #$3C05,$00009236 *MOVE.W D5,D6
-	MOVE.W #$2447,$00009238 *MOVE.L D7,A2
+	MOVE.W #$2447,$00009238 *MOVEA.L D7,A2
 	MOVE.W #$4E71,$0000923A *NOP
 	MOVE.W #$D95C,$0000923C *ADD.W D0,(A4)+
 	MOVE.W #$D3C2,$0000923E *ADDA.L D2,A1
@@ -85,7 +90,17 @@ START:                  ; first instruction of program
 	MOVE.W #$E0C7,$00009246 *ASR D7
 	MOVE.W #$ED4C,$00009248 *LSL.W #6, D4
 	MOVE.W #$E4BB,$0000924A *ROR.L D2, D3
-	
+	MOVE.W #$7404,$0000924C *MOVEQ #4, D2
+	MOVE.W #$C23C,$0000924E *AND.B #12, D1
+	MOVE.W #$000C,$00009250
+	MOVE.W #$2C3C,$00009252	*MOVE.L #$12345678, D6
+	MOVE.L #$12345678,$00009254
+	MOVE.W #$D4F8,$00009258	*ADDA.W $12,A2
+	MOVE.W #$0012,$0000925A
+	MOVE.W #$4607,$0000925C	*NOT.B D7
+	MOVE.W #$4EB9,$0000925E *JSR 00009208
+	MOVE.L #$00009208,$00009260
+	MOVE.W #$4E90,$00009264 *JSR (A0)             
 *---------- END Test ----------*
 
 
@@ -189,9 +204,17 @@ MemSearchLoop:
     beq         MemSearch_Done
     
     * Get data from memory
+    CLR D1
     move.w     (A4),D2
     move.w		D2, D3	mutable copy in D3
     * OPCODE Word Located in D2, mutable copy in D3
+    MOVE.L		A4, D1
+    MOVE.B 		#16, D2
+    MOVE.B 		#15, D0		print address of instruction
+    TRAP		#15
+    MOVE.W		D3,D2
+    LEA			space,A1
+    JSR 		print
     jsr         OPCODE_DECODE    
     
     adda.w      #2,A4
@@ -218,10 +241,10 @@ OPCODE_DECODE:
     * Begin OPCODE Decoding here
     * Check first four bits and begin
     * if-branch breakdown
-    CLR D4
-    CLR D5
-    CLR D6
-    CLR D7
+    CLR.L D4
+    CLR.L D5
+    CLR.L D6
+    CLR.L D7
     
 	CMP.W #$4E71, D2		
 	BEQ print_nop			*check if value is NOP
@@ -236,10 +259,10 @@ OPCODE_DECODE:
 	BEQ print_sub_and_or	*check if value is SUB
 	
 	CMP.W #$8000, D3
-	BEQ print_sub_and_or			*check if value is OR
+	BEQ print_sub_and_or	*check if value is OR
 
 	CMP.W #$C000,D3
-	BEQ print_sub_and_or			*check if value is AND
+	BEQ print_sub_and_or	*check if value is AND
 	
 	CMP.W #$D000,D3
 	BEQ	print_add_adda		*check if value is ADD or ADDA
@@ -247,17 +270,40 @@ OPCODE_DECODE:
 	CMP.W #$E000,D3
 	BEQ	print_ls_as_ro		*check if value is LSL, LSR, ASL, ASR, ROL, or ROR
 	
+	CMP.W   #$7000,D3
+	BEQ     print_moveq		*check if value is MOVEQ
+	
 	CMP.W #$1000,D2
 	BLT invalid
-	CMP.W #$4000, D2
+	CMP.W #$4000,D2
 	BLT print_move_movea 	*check if value is MOVE or MOVEA
 	
-	CMP.W   #$7000,D3
-	BEQ     print_moveq
+	* Mask out only the first 8 bits
+	MOVE.W D2, D3
+	AND.W #$FF00,D3
 	
+	CMP.W #$4600,D3
+	BEQ print_not			*check if value is NOT
 	
-invalid CLR D0    *need to add stuff to this
+	CMP.W #$4E00,D3
+ 	BEQ print_jsr			*check if value is JSR
+ 	
+ 	* Mask out only the first 4 bits and the 8th bit
+ 	MOVE.W D2,D3
+ 	AND.W #$F100, D3
+ 	
+ 	CMP.W #$5000,D3
+	BEQ print_addq			*check if value is ANDQ 	
+ 	
 	
+invalid 
+	LEA data, A1
+	JSR	print
+	MOVE.L D2, D1
+	MOVE.B #16, D2
+	MOVE.B 	#15, D0		
+    TRAP #15
+	JSR enter
 out	rts
 
     
@@ -265,55 +311,22 @@ out	rts
 
 * --------- Print Instruction ----------*
 
-print_moveq:
-    * now write that it is moveq
-    lea     moveq_ins,A1
-    move.b  #14,D0
-    trap    #15
-    
-    move.b  #tab,D1
-    move.b  #6,D0
-    trap    #15
-    
-    * Figure out the immediate data
-    
+print_moveq
+    lea moveq_ins, A1	*print MOVEQ
+    jsr	print
     move.w  D2,D3
-    and.w   #$00FF,D3
-    
-    lea     pound,A1
-    move.b  #14,D0
-    trap    #15
-    
+    and.w   #$00FF,D3	* Figure out the immediate address value
+    lea pound,A1		*print '#'
+    jsr	print
     move.b  #3,D0
     move.w  D3,D1
-    trap    #15
-
-    lea     comma,A1
-    move.b  #14,D0
-    trap    #15
-    
-    move.w  D2,D3
-    and.w   #%0000111000000000,D3
-    move.b  #9,D0
-    lsr.l   D0,D3
-    
-    move.b  #'D',D1
-    move.b  #6,D0
-    trap    #15
-    
-    move.b  #3,D0
-    move.w  D3,D1
-    trap    #15
-    
-    lea     return,A1
-    move.b  #14,D0
-    trap    #15
-    
-    jsr println
-    
-        
-    rts
-
+    trap    #15			*print immediate address value
+    lea comma,A1		*print comma
+   	jsr print
+    MOVE.W D2, D5
+    JSR data_reg_sr	    *figure out data address
+    jsr enter     		*print out enter
+    bra out
 
 print:
 	CLR D0 
@@ -324,6 +337,11 @@ print:
 println:
 	MOVE.B #13, D0
 	TRAP #15
+	RTS
+	
+enter: 
+	LEA return, A1
+	JSR print
 	RTS
 	
 print_nop
@@ -337,37 +355,37 @@ print_rts
 	BRA out
 
 print_move_movea
-	LSR.W #6, D3
-	AND.B #$3, D3
-	CMP.B #1, D3
+	MOVE.W D2, D3		
+	AND.W #$01C0, D3
+	CMP.W #$0040, D3	*determine if MOVE or MOVEA
 	BEQ move_a
-	LEA move_ins, A1
+	LEA move_ins, A1 *print Instruction 
 	JSR print
 	BRA m_size
-move_a 
+move_a 			*if instruction is MOVEA
     LEA movea_ins, A1
 	JSR print
-m_size 
-	MOVE.W D2, D4
-	AND.W #$3000, D4
+m_size 				*determine instruction size
 	JSR move_size
-	JSR addr
-	LEA comma, A1
+	JSR addr		*determine the source address
+	LEA comma, A1	*print comma
 	JSR print
-	MOVE.B #1, D7
+	MOVE.B #1, D7	*determine destination address
 	JSR addr
-	LEA return, A1
-	JSR print
+	JSR enter 		*print enter
 	BRA out
 	
 print_add_adda
-	MOVE.W D2, D3
+	MOVE.W D2, D3	
 	AND.B #$C0, D3
-	CMP.B #$C0, D3
+	CMP.B #$C0, D3		*determine if ADD or ADDA
 	BEQ add_a
+	*if just ADD then print instruction
 	LEA add_ins, A1
 	JSR print
+	*print instruction size for ADD
 	JSR size
+	*determine direction of ADD, Dn -> EA or EA -> Dn
 	MOVE.W D2,D3
 	AND.W #$0100, D3
 	CMP.W #$0100, D3
@@ -385,46 +403,47 @@ ea_dest_add 			*if Direction bit is 1
 	JSR print
 	JSR addr
 	BRA end_add
-add_a
+add_a					*if instruction is ADDA
 	LEA adda_ins, A1
 	JSR print
+	*print instruction size for ADDA (either W or L)
 	MOVE.W D2,D3
 	AND.W #$0100, D3
 	CMP.W #$0100, D3
-	BEQ add_size
+	BEQ adda_size
 	LEA word, A1
 	JSR print
 	BRA next_add
-add_size
+adda_size
 	LEA long,A1
 	JSR print
-next_add
+next_add				*print effective address for ADDA
 	JSR addr 			
 	LEA comma, A1
 	JSR print
 	JSR add_reg_sr
-end_add 
-	LEA return, A1
-	JSR print
+end_add 				*complete instruction printing by printing enter
+	JSR enter
 	BRA out
 
-
 print_sub_and_or
+	*determine if instruction is SUB, AND, or OR.
 	CMP.W #$8000, D3
 	BEQ print_or
 	CMP.W #$9000, D3
 	BEQ print_sub
 	LEA and_ins, A1
-	BRA print_value
+	BRA print_instruction
 print_sub
 	LEA sub_ins, A1
-	BRA print_value
+	BRA print_instruction
 print_or
 	LEA or_ins, A1
-print_value
+print_instruction		*print correct instruction
 	JSR print
-	JSR size
+	JSR size			*print instruction size
 	MOVE.W D2,D3
+*determine direction of ADD, Dn -> EA or EA -> Dn	
 	AND.W #$0100, D3
 	CMP.W #$0100, D3
 	BEQ ea_dest_sub_and_or
@@ -440,52 +459,53 @@ ea_dest_sub_and_or		*if Direction bit is 1
 	LEA comma, A1
 	JSR print
 	JSR addr
-	LEA return, A1
-	JSR print
+	*complete instruction printing by printing enter
+	JSR enter
 	BRA out
-	
-print_ls_as_ro					
+
+print_ls_as_ro
+	*figure out if shift or rotation are memory or register based				
 	MOVE.W D2, D3
 	AND.B #$C0, D3
 	CMP.B #$C0, D3
 	BEQ ls_as_ro_mem
 	MOVE.W D2, D3
 	LSR.B #3, D3
+	*print correct instruction type (logical shift, arithmetic shift, or rotation)
 	JSR print_correct_shift_rotation
-	JSR print_direction
-	JSR size
+	JSR print_direction		*print direction
+	JSR size				*print size
 	MOVE.W D2, D3
 	AND.B #$20,D3
 	CMP.B #$20, D3
-	BEQ ls_as_ro_reg
-	LEA pound, A1
+	*determine if instruction is using immediate address or register
+	BEQ ls_as_ro_reg	 
+	LEA pound, A1		 *if immediate address print '#'
 	JSR print
+	*print immediate address rotation value
 	MOVE.W D2,D6
 	ROL.W #7,D6
 	AND.W #$0007, D6
 	JSR Xn
-	LEA comma, A1
+	BRA continue_instruction_ls_as_ro
+ls_as_ro_reg			*if instruction is using register to shift values in another register
+	MOVE.W D2,D5
+	JSR data_reg_sr
+continue_instruction_ls_as_ro *complete instrcuction
+	LEA comma, A1		*print comma
 	JSR print
 	MOVE.W D2,D5
-	ROR.W #7,D5
-	JSR data_reg_sr
-	BRA next_ls_as_ro
-ls_as_ro_reg
-	MOVE.W D2,D5
-	JSR data_reg_sr
-	LEA comma, A1
-	JSR print
-	MOVE.W D2,D5
-	ROR.W #7,D5
-	JSR data_reg_sr
-	BRA next_ls_as_ro
-ls_as_ro_mem
+	ROR.W #7,D5			*rotate instruction to allow for subroutine reuse
+	JSR data_reg_sr 	*determine destination data register to perform instruction on
+	BRA next_ls_as_ro 	*finish printing instruction
+ls_as_ro_mem			*check if immediate address is being shifted or rotated
 	MOVE.W D2, D3
 	AND.B #$3F, D3
 	CMP.B #$3C, D3
 	BEQ invalid 	*ROL #4 <- not allowed (immediate addressing)
+	*if not immediate adress print normally 
 	MOVE.W D2, D3
-	ROL.W #7, D3
+	ROL.W #7, D3	
 	JSR print_correct_shift_rotation
 	MOVE.W D2,D3
 	JSR print_direction
@@ -493,48 +513,71 @@ ls_as_ro_mem
 	JSR print
 	JSR addr
 next_ls_as_ro
-	LEA return, A1
-	JSR print
+	JSR enter
 	BRA out
 	
+print_not
+	LEA not_ins, A1
+	JSR print
+	JSR size
+	MOVE.W D2, D3
+	AND.B #$3F, D3
+	CMP.B #$3C, D3
+	BEQ invalid 	*ROL #4 <- not allowed (immediate addressing)
+	JSR addr
+	JSR enter
+	BRA out
 
+print_jsr
+	LEA jsr_ins, A1
+	JSR print
+	JSR addr
+	JSR enter
+	BRA out
+
+print_lea
+
+print_addq
 
 print_direction:
+*print correct direction given direction bit
 	AND.W #$0100, D3
 	CMP.W #$0100, D3
-	BEQ print_left
+	BEQ print_left	*print left
 	LEA right, A1
 	JSR print
 	BRA out
 print_left
 	LEA left, A1
-	JSR print
+	JSR print *print right
 	RTS
 	
-
 print_correct_shift_rotation:
+*determine if instruction is logical, arithmetic, or rotation 
 	AND.B #$03, D3
 	CMP.B #$00, D3
 	BEQ print_as
 	CMP.B #$01, D3
 	BEQ print_ls
 	CMP.B #$03, D3
-	LEA ro_ins, A1
-	JSR print
-	BRA out
+	LEA ro_ins, A1	print rotation
+	BRA print_it
 print_as
-	LEA as_ins, A1
-	JSR print
-	BRA out
+	LEA as_ins, A1	print arithmetic shift
+	BRA print_it
 print_ls
-	LEA ls_ins, A1
+	LEA ls_ins, A1 print logical shift
+print_it
 	JSR print
 	RTS
 * --------- End Print Instruction ----------*
 
 * ------- Instruction sizes ---------*
 
-move_size:
+move_size: *print size for MOVE and MOVEA instruction
+	CLR.L D4
+	MOVE.W D2, D4
+	AND.W #$3000, D4
 	CMP.W #$1000, D4
 	BEQ print_b
 	CMP.W #$3000, D4
@@ -558,8 +601,8 @@ print_l:
 	JSR print
 	BRA out
 
-size:
-	CLR D4
+size: *print size for pretty much any other instruction
+	CLR.L D4
 	MOVE.B D2,D4
 	AND.B #$C0, D4
 	CMP.B #$00, D4
@@ -573,11 +616,11 @@ size:
 * ------- End Instruction sizes ---------*
 
 * ------- Effective Address -------*
-addr:
+addr:			*use if dealing with Mode, Xn (source) or Xn, Mode (destination, set D7 to 1)
     MOVE.W D2, D5
 	MOVE.W D2, D6				
 	CMP.B #1, D7
-	BEQ destination
+	BEQ destination *check if evaluating destination address (used for MOVE)
 cont
 	AND.B #$38, D6
 	CMP.B #0, D6
@@ -590,16 +633,17 @@ cont
 	BEQ post_increment
 	CMP.B #$20, D6
 	BEQ pre_decrement
+	CMP.B #$38, D6
+	BEQ absolute_or_immediate
 	BRA out *needs Immediate, Abs Long, and Abs Word
-	
-destination
+destination		*perform correct rotation to retrieve destination address
 	MOVE.W D5,D6
 	ROL.W #7,D5
 	LSR.W #3,D6
 	BRA cont
 	RTS
 
-data_reg
+data_reg	*used with addr sub routine
 	MOVE.W D5,D6	
 	AND.B #$07, D6	
 	LEA D_reg, A1	
@@ -607,7 +651,7 @@ data_reg
 	JSR Xn
 	BRA out
 
-add_reg
+add_reg		*used with addr sub routine
 	MOVE.W D5,D6	
 	AND.B #$07, D6
 	LEA A_reg, A1	
@@ -615,7 +659,7 @@ add_reg
 	JSR Xn
 	BRA out
 	
-add_indirect
+add_indirect	*used with addr sub routine
 	MOVE.W D5,D6	
 	AND.B #$07, D6
 	LEA open_paran, A1	
@@ -625,7 +669,7 @@ add_indirect
 	JSR print
 	BRA out
 	
-post_increment
+post_increment	*used with addr sub routine
 	MOVE.W D5,D6	
 	AND.B #$07, D6
 	LEA open_paran, A1	
@@ -635,7 +679,7 @@ post_increment
 	JSR print
 	BRA out
 	
-pre_decrement
+pre_decrement	*used with addr sub routine
 	MOVE.W D5,D6	
 	AND.B #$07, D6
 	LEA pre_dec, A1	
@@ -644,16 +688,70 @@ pre_decrement
 	LEA close_paran, A1	
 	JSR print
 	BRA out
+
+absolute_or_immediate *check if EA is immediate or absolute address
+	MOVE.W D5,D6	
+	AND.B #$07, D6
+	CMP.B #$00, D6
+	BEQ w_imm
+	CMP.B #$01, D6
+	BEQ l_imm
+	CMP.B #04, D6
+	BEQ immediate
 	
+immediate
+	LEA pound, A1
+	JSR print
+	CMP.L #$4000, D2
+	BLT move_movea		*check if instruction is move or movea
+	CMP.B #$40, D4		*if not move or movea
+	BLT w_imm			*byte and word check the next 2 addresses in mem
+	CMP.B #$80, D4
+	BEQ l_imm			*long checks the next 4 addresses in mem
+move_movea
+	CMP.W #$1000, D4
+	BEQ w_imm
+	CMP.W #$3000, D4
+	BEQ w_imm
+	CMP.W #$2000, D4
+	BEQ l_imm
+imm_complete
+	BRA out
+	
+w_imm
+	LEA dollar, A1
+	JSR print
+	ADDA.W #2,A4
+	MOVE.W (A4),D1
+	MOVE.W D2, D3
+	MOVE.W #16, D2
+	MOVE.B #15, D0
+	TRAP #15
+	MOVE.W D3,D2
+	BRA imm_complete
+	
+l_imm
+	LEA dollar, A1
+	JSR print
+	ADDA.W  #2,A4
+	MOVE.L (A4),D1
+	MOVE.W D2, D3
+	MOVE.W #16, D2
+	MOVE.B #15, D0
+	TRAP #15
+	MOVE.W D3,D2
+	ADD.W  #2,A4
+	BRA imm_complete
+
 Xn:
-	CLR D1
+	CLR.L D1
 	MOVE.B D6,D1
 	MOVE.B #3, D0
 	TRAP #15
 	RTS
 
-data_reg_sr:
-	CLR D6
+data_reg_sr:	*use if dealing with Dn only
+	CLR.L D6
 	MOVE.W D5,D6
 	ROL.W #7,D6
 	AND.B #$07, D6	
@@ -662,8 +760,8 @@ data_reg_sr:
 	JSR Xn
 	RTS
 	
-add_reg_sr:
-	CLR D6
+add_reg_sr:		*use if dealing with An only
+	CLR.L D6
 	MOVE.W D2,D6
 	ROL.W #7,D6
 	AND.B #$07, D6	
@@ -744,6 +842,7 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
