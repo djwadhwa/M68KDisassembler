@@ -308,6 +308,9 @@ OPCODE_DECODE:
  	MOVE.W D2,D3
  	AND.W #$F100, D3
  	
+ 	CMP.W #$4000, D3
+ 	BEQ print_movem			*check if value is MOVEM
+ 	
  	CMP.W #$4100, D3
  	BEQ print_lea			*check if value is LEA
  	
@@ -328,7 +331,7 @@ out	rts
     
 * -------- End of Opcode Section --------*   
 
-* --------- Print Instruction ----------*
+* --------- Print Instructions ----------*
 
 print_moveq
     lea moveq_ins, A1	*print MOVEQ
@@ -580,7 +583,7 @@ print_addq
 	JSR enter
 	BRA out
 
-print_bra_bcc
+print_bra_bcc			*needs comments
 	MOVE.W D2,D3
 	AND.W #$0F00, D3
 	CMP.W #$0000, D3
@@ -639,7 +642,30 @@ end_bra_bcc
 	JSR enter
 	BRA out
 
+print_movem			*needs comments
+	LEA movem_ins, A1
+	JSR print
+	MOVE.W D2,D3
+	AND.W #$0040,D3
+	CMP.W #$0040,D3
+	BEQ movem_long
+	LEA word, A1
+	JSR print
+	BRA movem_direction
+movem_long
+	LEA long, A1
+	JSR print
+movem_direction
+	MOVE.W D2,D3
+	AND.W #$0400,D3
+	CMP.W #$0400,D3
+	BEQ mem_to_reg
 	
+	
+mem_to_reg
+	JSR addr
+	LEA comma, A1
+	JSR print
 
 print_direction:
 *print correct direction given direction bit
@@ -870,6 +896,20 @@ add_reg_sr:		*use if dealing with An only
 	LEA A_reg, A1	
 	JSR print
 	JSR Xn
+	RTS
+	
+movem_predec:			*needs to be worked on
+	CLR.L D5
+	ADDA.W  #2,A4		*update current address
+	MOVE.W (A4),D5		*retrieve long data stored in the new current address
+	MOVE.B #0, D6
+a_loop
+	LSR.B #1,D5
+	BCC a_done
+	ADD.B #1,D6
+	BRA a_loop
+a_done
+
 	RTS
 
 * ------- End Effective Address -------*
