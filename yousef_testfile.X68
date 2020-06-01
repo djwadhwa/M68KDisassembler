@@ -10,7 +10,7 @@ START:                  ; first instruction of program
 * Put program code here
     moveq   #253,D0
     move.b  #5,D7
-    
+    movem.w     D1-D3/A3-A6,(SP)-
     
     
 
@@ -19,6 +19,7 @@ START:                  ; first instruction of program
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 *~Font name~Courier New~
