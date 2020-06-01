@@ -73,6 +73,8 @@ pre_dec				DC.B	'-(A',0
 space 				DC.B	' ',0
 comma				DC.B	', ',0
 pound				DC.B	'#',0
+dash				DC.B 	'-',0
+slash				DC.B	'/',0
 tab                 EQU     $9
 return				DC.B	CR,LF,0
 data				DC.B	'DATA $',0
@@ -114,6 +116,10 @@ START:                  ; first instruction of program
     MOVE.W #$FE60,$00009272
     MOVE.W #$4EB9,$00009274 *JSR 00009208
     MOVE.L #$00009208,$000009276
+    MOVE.W #$48A1,$0000927A
+    MOVE.W #$011F,$0000927C
+    MOVE.W #$4C91,$0000927E
+    MOVE.W #$0280,$00009280
 *---------- END Test ----------*
 
 
@@ -392,6 +398,7 @@ m_size 				*determine instruction size
 	JSR addr		*determine the source address
 	LEA comma, A1	*print comma
 	JSR print
+	CLR.B D7
 	MOVE.B #1, D7	*determine destination address
 	JSR addr
 	JSR enter 		*print enter
@@ -660,12 +667,19 @@ movem_direction
 	AND.W #$0400,D3
 	CMP.W #$0400,D3
 	BEQ mem_to_reg
-	
-	
+	JSR movem_predec
+	LEA comma, A1
+	JSR print
+	JSR addr
+	BRA end_movem
 mem_to_reg
 	JSR addr
 	LEA comma, A1
 	JSR print
+	JSR movem_postinc
+end_movem
+	JSR enter
+	BRA out
 
 print_direction:
 *print correct direction given direction bit
@@ -902,15 +916,160 @@ movem_predec:			*needs to be worked on
 	CLR.L D5
 	ADDA.W  #2,A4		*update current address
 	MOVE.W (A4),D5		*retrieve long data stored in the new current address
-	MOVE.B #0, D6
-a_loop
-	LSR.B #1,D5
-	BCC a_done
-	ADD.B #1,D6
-	BRA a_loop
-a_done
-
+	CMP.B #$00, D5
+	BEQ predec_skip_to_d
+	MOVE.W D5,D6
+	CLR.L D1
+	MOVE.B #0, D1
+a_loop1
+	ROL.B #1,D6
+	BCS a_loop1_done
+	ADD.B #1,D1
+	BRA a_loop1
+a_loop1_done
+	LEA A_reg,A1
+	JSR print
+	MOVE.B #3,D0
+	TRAP #15
+	CLR.L D7
+	MOVE.B #0, D7
+a_loop2
+	ROL.B #1,D6
+	BCC a_loop2_done
+	ADD.B #1,D7
+	ADD.B #1,D1
+	CMP.B #7, D1
+	BEQ a_loop2_done
+	BRA a_loop2
+a_loop2_done
+	CMP.B #0, D7
+	BEQ predec_no_dash
+	LEA dash, A1
+	JSR print
+	LEA A_reg,A1
+	JSR print
+	MOVE.B #3,D0
+	TRAP #15
+predec_no_dash
+	CMP.L #$00FF,D5
+	BLE end_movem_predec
+	LEA slash, A1
+	JSR print
+predec_skip_to_d	
+	MOVE.W D5,D6
+	LSR.W #8,D6
+	CLR.L D1
+	MOVE.B #0, D1
+d_loop1
+	ROL.B #1,D6
+	BCS d_loop1_done
+	ADD.B #1,D1
+	BRA d_loop1
+d_loop1_done
+	LEA D_reg,A1
+	JSR print
+	MOVE.B #3,D0
+	TRAP #15
+	CLR.L D7
+	MOVE.B #0, D7
+d_loop2
+	ROL.B #1,D6
+	BCC d_loop2_done
+	ADD.B #1,D1
+	CMP.B #7, D1
+	BEQ d_loop2_done
+	BRA d_loop2
+d_loop2_done
+	CMP.B #0, D7
+	BLE end_movem_predec
+	LEA dash, A1
+	JSR print
+	LEA D_reg,A1
+	JSR print
+	MOVE.B #3,D0
+	TRAP #15
+end_movem_predec
 	RTS
+	
+movem_postinc:			*needs to be worked on
+	CLR.L D5
+	ADDA.W  #2,A4		*update current address
+	MOVE.W (A4),D5		*retrieve long data stored in the new current address
+	MOVE.W D5,D6
+	LSR.W #8,D6
+	CMP.B #$00, D6
+	BEQ postinc_skip_to_d
+	CLR.L D1
+	MOVE.B #0, D1
+a_loop3
+	ROR.B #1,D6
+	BCS a_loop3_done
+	ADD.B #1,D1
+	BRA a_loop3
+a_loop3_done
+	LEA A_reg,A1
+	JSR print
+	MOVE.B #3,D0
+	TRAP #15
+	CLR.L D7
+	MOVE.B #0, D7
+a_loop4
+	ROR.B #1,D6
+	BCC a_loop4_done
+	ADD.B #1,D7
+	ADD.B #1,D1
+	CMP.B #7, D1
+	BEQ a_loop4_done
+	BRA a_loop4
+a_loop4_done
+	CMP.B #0, D7
+	BEQ postinc_no_dash
+	LEA dash, A1
+	JSR print
+	LEA A_reg,A1
+	JSR print
+	MOVE.B #3,D0
+	TRAP #15
+postinc_no_dash
+	CMP.B #$00, D5
+	BEQ end_movem_postinc
+	LEA slash, A1
+	JSR print
+postinc_skip_to_d	
+	MOVE.W D5,D6
+	CLR.L D1
+	MOVE.B #0, D1
+d_loop3
+	ROR.B #1,D6
+	BCS d_loop3_done
+	ADD.B #1,D1
+	BRA d_loop3
+d_loop3_done
+	LEA D_reg,A1
+	JSR print
+	MOVE.B #3,D0
+	TRAP #15
+	CLR.L D7
+	MOVE.B #0, D7
+d_loop4
+	ROR.B #1,D6
+	BCC d_loop4_done
+	ADD.B #1,D1
+	CMP.B #7, D1
+	BEQ d_loop4_done
+	BRA d_loop4
+d_loop4_done
+	CMP.B #0, D7
+	BLE end_movem_postinc
+	LEA dash, A1
+	JSR print
+	LEA D_reg,A1
+	JSR print
+	MOVE.B #3,D0
+	TRAP #15
+end_movem_postinc
+	RTS
+
 
 * ------- End Effective Address -------*
 
