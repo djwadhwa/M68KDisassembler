@@ -119,7 +119,7 @@ START:                  ; first instruction of program
     MOVE.W #$48A1,$0000927A
     MOVE.W #$011F,$0000927C
     MOVE.W #$4C91,$0000927E
-    MOVE.W #$0280,$00009280
+    MOVE.W #$FE00,$00009280
 *---------- END Test ----------*
 
 
