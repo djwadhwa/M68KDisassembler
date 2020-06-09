@@ -252,7 +252,14 @@ TerminateOrCont:
     lea         ContinueOrNotMsg,A1 
     trap        #15
     
+    rts
+
+ScreenFlush:
+    cmp.b       #30,D3
+    beq         FlushScreen
     rts 
+
+FlushScreen:
 
 * -------- Start of Opcode Section -------*    
 
@@ -1143,6 +1150,7 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
