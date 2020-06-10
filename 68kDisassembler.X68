@@ -122,9 +122,9 @@ START:                  ; first instruction of program
 *    MOVE.W #$FE00,$00009280
 *	MOVE.W #$C2BC, $00009000
 *	MOVE.L #$12345678, $00009002
-	MOVE.W #$82F9 , $00009000
-	MOVE.L #$12345678, $00009002 
-	MOVE.W #$9441, $00009006
+*	MOVE.W #$82F9 , $00009000
+*	MOVE.L #$12345678, $00009002 
+*	MOVE.W #$9441, $00009006
 *	MOVE.L #$12345678, $00009002
 *---------- END Test ----------*
 
@@ -491,6 +491,10 @@ print_sub_and_or
 	LEA and_ins, A1
 	BRA print_instruction
 print_sub
+	MOVE.W D2, D3
+	AND.W #$00C0, D3
+	CMP.B #$C0, D3
+	BEQ invalid
 	LEA sub_ins, A1
 	BRA print_instruction
 print_or
