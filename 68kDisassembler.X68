@@ -20,6 +20,7 @@ HextoASCIIMsg       dc.b    'Completed hex to ASCII conversion',0
 ASCIItoHexMsg       dc.b    'Completed ASCII to hex conversion',CR,LF,0
 
 EndOfMemLoop        dc.b    '-------End of mem loop----',CR,LF,0
+FlushScreenMsg      dc.b    'Press ENTER to continue with the next set of instructions',CR,LF,0
 HelpMsg             dc.b    'Inputs must be in hexadecimal in this format --> FFFFFFFF',CR,LF,0
 ContinueOrNotMsg    dc.b    'Would you like to Contunue or quit',0
 ExitMsg             dc.b    'Exiting Program',0
@@ -221,6 +222,10 @@ CheckAddress:
 
     
 MemSearch:
+    * Set up instruction counter and place onto stack
+    move.w      #0,D0
+    move.w      D0,-(SP)
+    
     jsr MemSearchLoop
     rts
     
@@ -245,6 +250,13 @@ MemSearchLoop:
     jsr         OPCODE_DECODE    
     
     adda.w      #2,A4
+    
+    * Call back counter from the stack
+    move.w      (SP)+,D0
+    add.b       #1,D0
+    jsr         ScreenFlush_Check
+    move.w      D0,-(SP)
+    
     bra         MemSearchLoop
     
     
@@ -262,12 +274,32 @@ TerminateOrCont:
     
     rts
 
-ScreenFlush:
-    cmp.b       #30,D3
+ScreenFlush_Check:
+    cmp.b       #30,D0
     beq         FlushScreen
     rts 
 
 FlushScreen:
+    lea     FlushScreenMsg,A1
+    move.b  #14,D0
+    trap    #15
+    jsr     FlushScreen_Input
+    rts
+
+FlushScreen_Input:
+
+    clr     D1
+
+    move.b  #5,D0
+    trap    #15
+    
+    cmp.b   #13,D1
+    beq     Enter_Press_True
+    
+    bra     FlushScreen_Input
+    
+Enter_Press_True:
+    rts
 
 * -------- Start of Opcode Section -------*    
 
@@ -1198,6 +1230,7 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
