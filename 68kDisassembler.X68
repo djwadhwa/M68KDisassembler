@@ -122,7 +122,7 @@ START:                  ; first instruction of program
 *    MOVE.W #$FE00,$00009280
 *	MOVE.W #$C2BC, $00009000
 *	MOVE.L #$12345678, $00009002 
-	MOVE.W #$82C0, $00009000
+	MOVE.W #$70FF, $00009000
 *	MOVE.L #$12345678, $00009002
 *---------- END Test ----------*
 
@@ -350,22 +350,6 @@ out	rts
 
 * --------- Print Instructions ----------*
 
-print_moveq
-    lea moveq_ins, A1	*print MOVEQ
-    jsr	print
-    move.w  D2,D3
-    and.w   #$00FF,D3	* Figure out the immediate address value
-    lea pound,A1		*print '#'
-    jsr	print
-    move.b  #3,D0
-    move.w  D3,D1
-    trap    #15			*print immediate address value
-    lea comma,A1		*print comma
-   	jsr print
-    MOVE.W D2, D5
-    JSR data_reg_sr	    *figure out data address
-    jsr enter     		*print out enter
-    bra out
 
 print:
 	CLR D0 
@@ -392,7 +376,29 @@ print_rts
 	LEA rts_ins, A1
 	JSR println
 	BRA out
-
+	
+print_moveq
+    lea moveq_ins, A1	*print MOVEQ
+    jsr	print
+    move.w  D2,D3
+    and.w   #$00FF,D3	* Figure out the immediate address value
+    lea pound,A1		*print '#'
+    jsr	print
+    LEA dollar, A1
+    JSR print
+    move.w  D3,D1
+    MOVE.W D2,D3
+    MOVE.W #16, D2
+    move.b  #15,D0
+    trap    #15			*print immediate address value
+    lea comma,A1		*print comma
+   	jsr print
+   	MOVE.W D3, D2
+    MOVE.W D2, D5
+    JSR data_reg_sr	    *figure out data address
+    jsr enter     		*print out enter
+    bra out
+    
 print_move_movea
 	MOVE.W D2, D3		
 	AND.W #$01C0, D3

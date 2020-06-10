@@ -19,11 +19,9 @@ MOVEM not displaying correct registers
 00009260  48B9 0280 12345678       273      MOVEM.W   A1/D7,$12345678
 00009268  48F9 0280 12345678       274      MOVEM.L   A1/D7,$12345678
 
-
 prints out incorrect register (no A1, perhaps bit shifting error)
 00009120  92C1                     146      SUB.W     D1,A1
 00009132  93C1                     155      SUB.L     D1,A1
-
 
 need to check if the behavior is correct (seems right at first glance)
 000091D6  6E30                     237      BGT.B     label1
