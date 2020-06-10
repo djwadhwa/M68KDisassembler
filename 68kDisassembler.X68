@@ -123,7 +123,7 @@ START:                  ; first instruction of program
 *    MOVE.W #$FE00,$00009280
 *	MOVE.W #$C2BC, $00009000
 *	MOVE.L #$12345678, $00009002
-	MOVE.W #$48B9, $00009000
+	MOVE.W #$4CF9, $00009000
 	MOVE.W #$0280, $00009002 
 	MOVE.L #$12345678, $00009004
 *	MOVE.W #$9441, $00009006
@@ -795,6 +795,34 @@ movem_direction
 	JSR addr
 	BRA end_movem
 mem_to_reg
+	MOVE.W D2, D3
+	AND.W #$003F, D3
+	CMP.W #$0038, D3
+	BEQ fix_mem_order_word
+	CMP.W #$0039, D3
+	BEQ fix_mem_order_long
+	BRA movem_cont
+fix_mem_order_word
+	MOVE.L A4, A6
+	ADD.W #4, A6
+	MOVE.L (A6),D5
+	SWAP D5
+	MOVE.L D5, (A6)
+	CLR.L D5
+	BRA movem_cont
+fix_mem_order_long
+	MOVE.L A4, A6
+	ADD.W #2, A6
+	MOVE.W (A6),D5
+	ADD.W #2, A6
+	MOVE.L (A6),D6
+	SUB.W #2, A6
+	MOVE.L D6, (A6)
+	ADD.W #4, A6
+	MOVE.W D5, (A6)
+	CLR.L D5
+	CLR.L D6
+movem_cont
 	JSR addr
 	LEA comma, A1
 	JSR print
