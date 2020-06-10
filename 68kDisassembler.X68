@@ -122,8 +122,8 @@ START:                  ; first instruction of program
 *    MOVE.W #$FE00,$00009280
 *	MOVE.W #$C2BC, $00009000
 *	MOVE.L #$12345678, $00009002 
-	MOVE.W #$E0F9, $00009000
-	MOVE.L #$12345678, $00009002
+	MOVE.W #$82C0, $00009000
+*	MOVE.L #$12345678, $00009002
 *---------- END Test ----------*
 
 
@@ -471,6 +471,8 @@ print_sub_and_or
 	MOVE.W D2, D3
 	AND.W #$F0C0, D3
 	CMP.W #$C0C0, D3
+	BEQ invalid
+	CMP.W #$80C0, D3
 	BEQ invalid
 	AND.W #$F000,D3
 	CMP.W #$8000, D3

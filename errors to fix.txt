@@ -24,11 +24,6 @@ prints out incorrect register (no A1, perhaps bit shifting error)
 00009120  92C1                     146      SUB.W     D1,A1
 00009132  93C1                     155      SUB.L     D1,A1
 
-prints out OR instead of DATA
-0000914A  82C0                     167      DIVU.W    D0,D1
-0000914C  82D0                     168      DIVU.W    (A0),D1
-0000914E  82E0                     169      DIVU.W    -(A0),D1
-00009150  82D8                     170      DIVU.W    (A0)+,D1
 
 need to check if the behavior is correct (seems right at first glance)
 000091D6  6E30                     237      BGT.B     label1
