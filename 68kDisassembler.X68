@@ -19,14 +19,14 @@ ErrorMsg            dc.b    'Error in Input',0
 HextoASCIIMsg       dc.b    'Completed hex to ASCII conversion',0
 ASCIItoHexMsg       dc.b    'Completed ASCII to hex conversion',CR,LF,0
 
-EndOfMemLoop        dc.b    '-------End of mem loop----',CR,LF,0
+EndOfMemLoop        dc.b    '---Finished Reading Instructions---',CR,LF,0
 FlushScreenMsg      dc.b    'Press ENTER to continue with the next set of instructions',0
 HelpMsg             dc.b    'Inputs must be in hexadecimal in this format --> FFFFFFFF',CR,LF,0
 ContinueOrNotMsg    dc.b    'Would you like to Disassemble more data or quit (y/n)',0
 ExitMsg             dc.b    'Exiting Program',0
 
-START_ADDR_BUFFER  DS.B    256
-END_ADDR_BUFFER    DS.B    256
+*START_ADDR_BUFFER  DS.B    256
+*END_ADDR_BUFFER    DS.B    256
 
 *size
 long 				DC.B 	'.L ',0
@@ -123,11 +123,11 @@ START:                  ; first instruction of program
 *    MOVE.W #$FE00,$00009280
 *	MOVE.W #$C2BC, $00009000
 *	MOVE.L #$12345678, $00009002
-	MOVE.W #$82F9 , $00009000
-	MOVE.L #$12345678, $00009002 
-	MOVE.W #$9441, $00009006
-	Move.w #$C27C, $00009008
-	move.w #$1234, $0000900A
+*	MOVE.W #$82F9 , $00009000
+*	MOVE.L #$12345678, $00009002 
+*	MOVE.W #$9441, $00009006
+*	Move.w #$C27C, $00009008
+*	move.w #$1234, $0000900A
 *	MOVE.L #$12345678, $00009002
 *---------- END Test ----------*
 
@@ -183,18 +183,15 @@ MENU:
     jsr         Clear_Registers
     jsr         GetStartAddress
     jsr         GetEndAddress
-    jsr         CheckAddress
     
     jsr         MemSearch
-    jsr         TerminateOrCont
     rts
     
-GetStartAddress:
-    
-    move.b      #14, D0         *Display input message
-    lea         InputMsg1,A1
-    trap        #15
-    
+GetStartAddress:         *Display input message
+	move.b	#14, D0
+	lea         InputMsg1,A1
+    trap #15
+    MOVEA.L #0, A1
     move.b      #2,D0
     trap        #15
         
@@ -208,25 +205,13 @@ GetEndAddress:
     move.b      #14,D0          *Display input message
     lea         InputMsg2,A1
     trap        #15
-    
+    MOVEA.L #0, A1
     move.b      #2,D0
     trap        #15
     
     jsr         ASCIItoHex      *conversion to hex
     * Address Located in D6 (overwrite)
     movea.l     D6,A5           *move into address register 5
-    rts
-    
-CheckAddress:
-    
-    move.l     A4,D0
-    move.l     A5,D1
-
-    cmp.l      D0,D1
-    beq        MENU
-    
-    cmp.l      D1,D0
-    bra        MENU
     rts
 
 
@@ -298,19 +283,25 @@ MemSearchLoop:
     bra         MemSearchLoop
     
     
-MemSearch_Done:
-    move.b      #14,D0
+MemSearch_Done
     lea         EndOfMemLoop,A1 
-    trap        #15
-    rts
-    
-TerminateOrCont:
-    jsr         Clear_Registers
+    jsr print
+    lea 	return, A1
+    jsr print
+    lea ContinueOrNotMsg, A1
+    jsr print
+    MOVE.B #5, D0
+    TRAP #15
+    lea return, A1
+    jsr print
+    CMP.B #121, D1    
+    beq MENU
     move.b      #14,D0
-    lea         ContinueOrNotMsg,A1 
+    lea         ExitMsg,A1 
     trap        #15
     
-    rts
+    move.b      #9,D0
+    trap        #15
 
 ScreenFlush_Check:
     cmp.b       #31,D0 * 31
@@ -1273,6 +1264,7 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 *~Font name~Courier New~
 *~Font size~10~
