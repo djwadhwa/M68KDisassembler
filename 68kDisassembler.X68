@@ -20,7 +20,7 @@ HextoASCIIMsg       dc.b    'Completed hex to ASCII conversion',0
 ASCIItoHexMsg       dc.b    'Completed ASCII to hex conversion',CR,LF,0
 
 EndOfMemLoop        dc.b    '-------End of mem loop----',CR,LF,0
-FlushScreenMsg      dc.b    'Press ENTER to continue with the next set of instructions',CR,LF,0
+FlushScreenMsg      dc.b    'Press ENTER to continue with the next set of instructions',0
 HelpMsg             dc.b    'Inputs must be in hexadecimal in this format --> FFFFFFFF',CR,LF,0
 ContinueOrNotMsg    dc.b    'Would you like to Contunue or quit',0
 ExitMsg             dc.b    'Exiting Program',0
@@ -186,6 +186,7 @@ MENU:
     jsr         CheckAddress
     
     jsr         MemSearch
+    jsr         TerminateOrCont
     rts
     
 GetStartAddress:
@@ -220,8 +221,39 @@ CheckAddress:
     cmp.l       A4,A5
     beq         Menu
 
+
+
+
+ClearScreen:
+    lea     return,A1
+    move.b  #14,D0
+    trap    #15
+    
+    *move.b  #9,D0
+    *trap    #15
+    
+    cmp.w   #40,D1
+    beq     ClearDone
+    add.w   #1,D1
+    bra     ClearScreen
+
+
+ClearScreen_40:
+    lea     return,A1
+    move.b  #14,D0
+    trap    #15
+    
+    cmp.l   #40,D1
+    beq     ClearDone
+    add.l   #1,D1
+    bra     ClearScreen_40
+    
+ClearDone:
+    rts
     
 MemSearch:
+    move.l      #0,D1
+    jsr         ClearScreen
     * Set up instruction counter and place onto stack
     move.w      #0,D0
     move.w      D0,-(SP)
@@ -267,7 +299,7 @@ MemSearch_Done:
     rts
     
 TerminateOrCont:
-    * Used to check if user would like to terminate the program or continue to disassemble more data
+    jsr         Clear_Registers
     move.b      #14,D0
     lea         ContinueOrNotMsg,A1 
     trap        #15
@@ -275,15 +307,17 @@ TerminateOrCont:
     rts
 
 ScreenFlush_Check:
-    cmp.b       #30,D0
+    cmp.b       #31,D0 * 31
     beq         FlushScreen
     rts 
 
 FlushScreen:
-    lea     FlushScreenMsg,A1
-    move.b  #14,D0
-    trap    #15
-    jsr     FlushScreen_Input
+    lea         FlushScreenMsg,A1
+    move.b      #14,D0
+    trap        #15
+    jsr         FlushScreen_Input
+    *move.l      #0,D1
+    *jsr         ClearScreen_40
     rts
 
 FlushScreen_Input:
@@ -294,12 +328,15 @@ FlushScreen_Input:
     trap    #15
     
     cmp.b   #13,D1
-    beq     Enter_Press_True
+    beq     Enter_Press_True    
     
     bra     FlushScreen_Input
     
 Enter_Press_True:
     rts
+    
+
+    
 
 * -------- Start of Opcode Section -------*    
 
