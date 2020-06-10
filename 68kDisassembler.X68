@@ -123,7 +123,7 @@ START:                  ; first instruction of program
 *    MOVE.W #$FE00,$00009280
 *	MOVE.W #$C2BC, $00009000
 *	MOVE.L #$12345678, $00009002
-	MOVE.W #$48F9, $00009000
+	MOVE.W #$48B9, $00009000
 	MOVE.W #$0280, $00009002 
 	MOVE.L #$12345678, $00009004
 *	MOVE.W #$9441, $00009006
@@ -813,6 +813,8 @@ movem_check_pre_post:
 movem_check_pre
 	JSR movem_predec
 movem_check_done
+	CLR.L D7
+	CLR.L D1
 	RTS
 
 print_direction:
