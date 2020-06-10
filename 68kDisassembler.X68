@@ -22,7 +22,7 @@ ASCIItoHexMsg       dc.b    'Completed ASCII to hex conversion',CR,LF,0
 EndOfMemLoop        dc.b    '-------End of mem loop----',CR,LF,0
 FlushScreenMsg      dc.b    'Press ENTER to continue with the next set of instructions',0
 HelpMsg             dc.b    'Inputs must be in hexadecimal in this format --> FFFFFFFF',CR,LF,0
-ContinueOrNotMsg    dc.b    'Would you like to Contunue or quit',0
+ContinueOrNotMsg    dc.b    'Would you like to Disassemble more data or quit (y/n)',0
 ExitMsg             dc.b    'Exiting Program',0
 
 START_ADDR_BUFFER  DS.B    256
@@ -218,10 +218,16 @@ GetEndAddress:
     rts
     
 CheckAddress:
-    cmp.l       A4,A5
-    beq         Menu
+    
+    move.l     A4,D0
+    move.l     A5,D1
 
-
+    cmp.l      D0,D1
+    beq        MENU
+    
+    cmp.l      D1,D0
+    bra        MENU
+    rts
 
 
 ClearScreen:
@@ -1267,19 +1273,6 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 *~Font name~Courier New~
 *~Font size~10~
