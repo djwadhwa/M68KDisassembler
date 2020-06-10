@@ -122,9 +122,11 @@ START:                  ; first instruction of program
 *    MOVE.W #$FE00,$00009280
 *	MOVE.W #$C2BC, $00009000
 *	MOVE.L #$12345678, $00009002
-*	MOVE.W #$82F9 , $00009000
-*	MOVE.L #$12345678, $00009002 
-*	MOVE.W #$9441, $00009006
+	MOVE.W #$82F9 , $00009000
+	MOVE.L #$12345678, $00009002 
+	MOVE.W #$9441, $00009006
+	Move.w #$C27C, $00009008
+	move.w #$1234, $0000900A
 *	MOVE.L #$12345678, $00009002
 *---------- END Test ----------*
 
@@ -900,7 +902,7 @@ immediate
 	CMP.L #$4000, D2	*using CMP.L to avoid sign extention for value in D2 caused previously by CMP.W
 	BLT move_movea		*check if instruction is move or movea
 	CMP.L #$0040, D4		*if not move or movea
-	BLT w_imm			*byte and word check the next 2 addresses in mem
+	BLE w_imm			*byte and word check the next 2 addresses in mem
 	CMP.L #$0080, D4
 	BEQ l_imm			*long checks the next 4 addresses in mem
 move_movea				*similar comparisons, but for different bits in OPCODE

@@ -39,7 +39,7 @@ need to check if the behavior is correct (seems right at first glance)
 000093AE  6700 FE70                345      BEQ.W     label3
 
 reads incorrect address for source
-0009270  4CB8 FE00 0012           275      MOVEM.W   $12,A1-A7
+00009270  4CB8 FE00 0012           275      MOVEM.W   $12,A1-A7
 00009276  4CF8 00FE 0012           276      MOVEM.L   $12,D1-D7
 0000927C  4CB8 0280 0012           277      MOVEM.W   $12,A1/D7
 00009282  4CF8 0280 0012           278      MOVEM.L   $12,A1/D7
@@ -51,6 +51,3 @@ reads incorrect address for source
 000092A8  4CF9 00FE 12345678       284      MOVEM.L   $12345678,D1-D7
 000092B0  4CB9 0280 12345678       285      MOVEM.W   $12345678,A1/D7
 000092B8  4CF9 0280 12345678       286      MOVEM.L   $12345678,A1/D7
-
-no output for immediate address
-00009346  C27C 1234                316      AND.W     #$1234,D1
