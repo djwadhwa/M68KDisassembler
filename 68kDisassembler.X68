@@ -84,42 +84,44 @@ START:                  ; first instruction of program
 
 *---------- Test value, will remove in final build ----------*
 
-	Move.W #$4E75,$00009234 *RTS
-	MOVE.W #$3C05,$00009236 *MOVE.W D5,D6
-	MOVE.W #$2447,$00009238 *MOVEA.L D7,A2
-	MOVE.W #$4E71,$0000923A *NOP
-	MOVE.W #$D95C,$0000923C *ADD.W D0,(A4)+
-	MOVE.W #$D3C2,$0000923E *ADDA.L D2,A1
-	MOVE.W #$9822,$00009240 *SUB.B -(A2),D4
-	MOVE.W #$C246,$00009242 *AND.W D6,D1
-	MOVE.W #$8593,$00009244 *OR.L D2,(A3)
-	MOVE.W #$E0C7,$00009246 *ASR D7
-	MOVE.W #$ED4C,$00009248 *LSL.W #6, D4
-	MOVE.W #$E4BB,$0000924A *ROR.L D2, D3
-	MOVE.W #$7404,$0000924C *MOVEQ #4, D2
-	MOVE.W #$C23C,$0000924E *AND.B #12, D1
-	MOVE.W #$000C,$00009250
-	MOVE.W #$2C3C,$00009252	*MOVE.L #$12345678, D6
-	MOVE.L #$12345678,$00009254
-	MOVE.W #$D4F8,$00009258	*ADDA.W $12, A2
-	MOVE.W #$0012,$0000925A
-	MOVE.W #$4607,$0000925C	*NOT.B D7
-	MOVE.W #$4EB9,$0000925E *JSR $9208
-	MOVE.L #$00009208,$00009260
-	MOVE.W #$4E90,$00009264 *JSR (A0)
-	MOVE.W #$41D0,$00009266 *LEA (A0), A0 
-	MOVE.W #$5E14,$00009268 *ADDQ.B #7, (A4)
-    MOVE.W #$6EFE,$0000926A *BGT.B FE
-    MOVE.W #$6F00,$0000926C *BLE.W FE7A
-    MOVE.W #$FE7A,$0000926E
-    MOVE.W #$6700,$00009270 *BEQ.W FE60
-    MOVE.W #$FE60,$00009272
-    MOVE.W #$4EB9,$00009274 *JSR 00009208
-    MOVE.L #$00009208,$000009276
-    MOVE.W #$48A1,$0000927A
-    MOVE.W #$011F,$0000927C
-    MOVE.W #$4C91,$0000927E
-    MOVE.W #$FE00,$00009280
+*	Move.W #$4E75,$00009234 *RTS
+*	MOVE.W #$3C05,$00009236 *MOVE.W D5,D6
+*	MOVE.W #$2447,$00009238 *MOVEA.L D7,A2
+*	MOVE.W #$4E71,$0000923A *NOP
+*	MOVE.W #$D95C,$0000923C *ADD.W D0,(A4)+
+*	MOVE.W #$D3C2,$0000923E *ADDA.L D2,A1
+*	MOVE.W #$9822,$00009240 *SUB.B -(A2),D4
+*	MOVE.W #$C246,$00009242 *AND.W D6,D1
+*	MOVE.W #$8593,$00009244 *OR.L D2,(A3)
+*	MOVE.W #$E0C7,$00009246 *ASR D7
+*	MOVE.W #$ED4C,$00009248 *LSL.W #6, D4
+*	MOVE.W #$E4BB,$0000924A *ROR.L D2, D3
+*	MOVE.W #$7404,$0000924C *MOVEQ #4, D2
+*	MOVE.W #$C23C,$0000924E *AND.B #12, D1
+*	MOVE.W #$000C,$00009250
+*	MOVE.W #$2C3C,$00009252	*MOVE.L #$12345678, D6
+*	MOVE.L #$12345678,$00009254
+*	MOVE.W #$D4F8,$00009258	*ADDA.W $12, A2
+*	MOVE.W #$0012,$0000925A
+*	MOVE.W #$4607,$0000925C	*NOT.B D7
+*	MOVE.W #$4EB9,$0000925E *JSR $9208
+*	MOVE.L #$00009208,$00009260
+*	MOVE.W #$4E90,$00009264 *JSR (A0)
+*	MOVE.W #$41D0,$00009266 *LEA (A0), A0 
+*	MOVE.W #$5E14,$00009268 *ADDQ.B #7, (A4)
+*    MOVE.W #$6EFE,$0000926A *BGT.B FE
+*    MOVE.W #$6F00,$0000926C *BLE.W FE7A
+*    MOVE.W #$FE7A,$0000926E
+*    MOVE.W #$6700,$00009270 *BEQ.W FE60
+*    MOVE.W #$FE60,$00009272
+*    MOVE.W #$4EB9,$00009274 *JSR 00009208
+*    MOVE.L #$00009208,$000009276
+*    MOVE.W #$48A1,$0000927A
+*    MOVE.W #$011F,$0000927C
+*    MOVE.W #$4C91,$0000927E
+*    MOVE.W #$FE00,$00009280
+*	MOVE.W #$C2BC, $00009000
+*	MOVE.L #$12345678, $00009002 
 *---------- END Test ----------*
 
 
@@ -464,6 +466,11 @@ end_add 				*complete instruction printing by printing enter
 
 print_sub_and_or
 	*determine if instruction is SUB, AND, or OR.
+	MOVE.W D2, D3
+	AND.W #$F0C0, D3
+	CMP.W #$C0C0, D3
+	BEQ invalid
+	AND.W #$F000,D3
 	CMP.W #$8000, D3
 	BEQ print_or
 	CMP.W #$9000, D3
@@ -853,9 +860,9 @@ immediate
 	JSR print
 	CMP.L #$4000, D2	*using CMP.L to avoid sign extention for value in D2 caused previously by CMP.W
 	BLT move_movea		*check if instruction is move or movea
-	CMP.B #$40, D4		*if not move or movea
+	CMP.L #$0040, D4		*if not move or movea
 	BLT w_imm			*byte and word check the next 2 addresses in mem
-	CMP.B #$80, D4
+	CMP.L #$0080, D4
 	BEQ l_imm			*long checks the next 4 addresses in mem
 move_movea				*similar comparisons, but for different bits in OPCODE
 	CMP.W #$1000, D4
@@ -1150,6 +1157,7 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
+
 
 
 
