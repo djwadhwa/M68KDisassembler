@@ -38,11 +38,6 @@ need to check if the behavior is correct (seems right at first glance)
 000093AA  6700 FE6E                344      BEQ.W     label2
 000093AE  6700 FE70                345      BEQ.W     label3
 
-prints out immdiate address as decimal instead of hex
-0000921A  7000                     259      MOVEQ     #$0,D0
-0000921C  7012                     260      MOVEQ     #$12,D0
-0000921E  70FF                     261      MOVEQ     #$FF,D0
-
 reads incorrect address for source
 0009270  4CB8 FE00 0012           275      MOVEM.W   $12,A1-A7
 00009276  4CF8 00FE 0012           276      MOVEM.L   $12,D1-D7
@@ -57,9 +52,6 @@ reads incorrect address for source
 000092B0  4CB9 0280 12345678       285      MOVEM.W   $12345678,A1/D7
 000092B8  4CF9 0280 12345678       286      MOVEM.L   $12345678,A1/D7
 
-prints only #$1234 (probably another sign extension error)
-000092E0  D5FC 12345678            294      ADDA.L    #$12345678,A2
-
 fails to skip the next word in memory
 000092E6  C3F8 0012                295      MULS.W    $12,D1
 000092EA  C3F8 1234                296      MULS.W    $1234,D1
@@ -73,13 +65,6 @@ fails to skip the next word in memory
 no output for immediate address
 00009346  C27C 1234                316      AND.W     #$1234,D1
 
-immediate address needs to be hex
-0000936C  E30A                     324      LSL.B     #$1,D2
-0000936E  E54A                     325      LSL.W     #$2,D2
-00009370  E78A                     326      LSL.L     #$3,D2
-00009380  E202                     330      ASR.B     #$1,D2
-00009382  E442                     331      ASR.W     #$2,D2
-00009384  E682                     332      ASR.L     #$3,D2
 
 try to zero extend
 000093B2  4EB9 00009208            346      JSR       label1

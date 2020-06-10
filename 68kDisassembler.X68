@@ -122,8 +122,8 @@ START:                  ; first instruction of program
 *    MOVE.W #$FE00,$00009280
 *	MOVE.W #$C2BC, $00009000
 *	MOVE.L #$12345678, $00009002 
-	MOVE.W #$70FF, $00009000
-*	MOVE.L #$12345678, $00009002
+	MOVE.W #$D5FC , $00009000
+	MOVE.L #$12345678, $00009002
 *---------- END Test ----------*
 
 
@@ -463,6 +463,7 @@ add_a					*if instruction is ADDA
 adda_size
 	LEA long,A1
 	JSR print
+	MOVE.B #$80, D4
 next_add				*print effective address for ADDA
 	JSR addr 			
 	LEA comma, A1
@@ -539,7 +540,15 @@ print_ls_as_ro
 	MOVE.W D2,D6
 	ROL.W #7,D6
 	AND.W #$0007, D6
-	JSR Xn
+	LEA dollar, A1
+	JSR print
+	CLR.L D1
+	MOVE.W D6, D1
+	MOVE.W D2, D3
+	MOVE.B #16, D2
+	MOVE.B #15, D0
+	TRAP #15
+	MOVE.W D3,D2
 	BRA continue_instruction_ls_as_ro
 ls_as_ro_reg			*if instruction is using register to shift values in another register
 	MOVE.W D2,D5
