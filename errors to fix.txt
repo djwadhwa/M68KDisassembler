@@ -30,26 +30,6 @@ prints out OR instead of DATA
 0000914E  82E0                     169      DIVU.W    -(A0),D1
 00009150  82D8                     170      DIVU.W    (A0)+,D1
 
-Does not print out size
-000091AA  E3D1                     215      LSL.W     (A1)
-000091AC  E3D9                     216      LSL.W     (A1)+
-000091AE  E3E1                     217      LSL.W     -(A1)
-000091B6  E2D1                     221      LSR.W     (A1)
-000091B8  E2D9                     222      LSR.W     (A1)+
-000091BA  E2E1                     223      LSR.W     -(A1)
-000091C2  E0D1                     227      ASR.W     (A1)
-000091C4  E0D9                     228      ASR.W     (A1)+
-000091C6  E0E1                     229      ASR.W     -(A1)
-000091CE  E1D1                     233      ASL.W     (A1)
-000091D0  E1D9                     234      ASL.W     (A1)+
-000091D2  E1E1                     235      ASL.W     -(A1)
-00009372  E3F8 0012                327      LSL.W     $12
-00009376  E3F8 1234                328      LSL.W     $1234
-0000937A  E3F9 12345678            329      LSL.W     $12345678
-00009386  E0F8 0012                333      ASR.W     $12
-0000938A  E0F8 1234                334      ASR.W     $1234
-0000938E  E0F9 12345678            335      ASR.W     $12345678
-
 need to check if the behavior is correct (seems right at first glance)
 000091D6  6E30                     237      BGT.B     label1
 000091D8  6E40                     238      BGT.B     label2

@@ -122,6 +122,8 @@ START:                  ; first instruction of program
 *    MOVE.W #$FE00,$00009280
 *	MOVE.W #$C2BC, $00009000
 *	MOVE.L #$12345678, $00009002 
+	MOVE.W #$E0F9, $00009000
+	MOVE.L #$12345678, $00009002
 *---------- END Test ----------*
 
 
@@ -552,7 +554,7 @@ ls_as_ro_mem			*check if immediate address is being shifted or rotated
 	JSR print_correct_shift_rotation
 	MOVE.W D2,D3
 	JSR print_direction
-	LEA space, A1
+	LEA word, A1
 	JSR print
 	JSR addr
 next_ls_as_ro
