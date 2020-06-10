@@ -121,9 +121,11 @@ START:                  ; first instruction of program
 *    MOVE.W #$4C91,$0000927E
 *    MOVE.W #$FE00,$00009280
 *	MOVE.W #$C2BC, $00009000
-*	MOVE.L #$12345678, $00009002 
-	MOVE.W #$D5FC , $00009000
-	MOVE.L #$12345678, $00009002
+*	MOVE.L #$12345678, $00009002
+	MOVE.W #$82F9 , $00009000
+	MOVE.L #$12345678, $00009002 
+	MOVE.W #$9441, $00009006
+*	MOVE.L #$12345678, $00009002
 *---------- END Test ----------*
 
 
@@ -478,9 +480,9 @@ print_sub_and_or
 	MOVE.W D2, D3
 	AND.W #$F0C0, D3
 	CMP.W #$C0C0, D3
-	BEQ invalid
+	BEQ mul_div
 	CMP.W #$80C0, D3
-	BEQ invalid
+	BEQ mul_div
 	AND.W #$F000,D3
 	CMP.W #$8000, D3
 	BEQ print_or
@@ -516,7 +518,21 @@ ea_dest_sub_and_or		*if Direction bit is 1
 	*complete instruction printing by printing enter
 	JSR enter
 	BRA out
-
+	
+mul_div				*deal with MULU and DIVU cases
+	CLR.L D3
+	MOVE.W D2,D3
+	AND.W #$00FF, D3
+	CMP.L #$00F8, D3
+	BLT invalid
+	CMP.L #$00F9, D3
+	BEQ mul_div_long
+	ADDA.W #2,A4
+	BRA invalid
+mul_div_long
+	ADDA.W #4,A4
+	BRA invalid
+	
 print_ls_as_ro
 	*figure out if shift or rotation are memory or register based				
 	MOVE.W D2, D3
