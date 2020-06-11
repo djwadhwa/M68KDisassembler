@@ -81,7 +81,26 @@ dollar				DC.B 	'$',0
     
 	ORG    $1000    *Start at address $1000
 START:                  ; first instruction of program
+*----- Testing specific opcodes------*
 
+
+	MOVE.W #$467C, $00009500 *NOT.W #1234
+	MOVE.W #$1234, $00009502
+	MOVE.W #$E7FC, $00009504 *ROL #$5678
+	MOVE.W #$5678, $00009506
+	MOVE.W #$E1FC, $00009508 *ASL #$9ABC
+	MOVE.W #$9ABC, $0000950A
+	MOVE.W #$E2FC, $0000950C *LSR #$DEF1
+	MOVE.W #$DEF1, $0000950E
+	
+	
+	MOVE.W #$82F8, $00009600 *DIVU.W    $12,D1
+	MOVE.W #$0012, $00009602 
+	MOVE.W #$C3F9, $00009604 *MULS.W  $12345678,D1
+	MOVE.L #$12345678, $00009606 
+	MOVE.W #$92C1, $0000960A *SUBA.W     D1,A1G
+	
+	
 *---------- Beginning Messages ----------*
     
     move.b      #14,D0
@@ -105,6 +124,8 @@ START:                  ; first instruction of program
 * ---------------------------------------*
     
 *-- End of Opening and Ending Messages --*
+
+
 
 *--------- Start of I/O Section ---------*
 
@@ -138,10 +159,19 @@ invalid_input
 	lea			EndAddressInc, A1
 	move.b 		#14, D0
 	trap 		#15
-	lea			return, A1
-	jsr			print
+	jsr			enter
 	bra 		MENU
 menu_cont
+	cmp.l #$00009000, A4
+	blt invalid_address_provided
+	bra resume
+invalid_address_provided
+	lea			InputIsInc, A1
+	move.b 		#14, D0
+	trap 		#15
+	jsr			enter
+	bra 		MENU
+resume
     jsr         MemSearch
     rts
     
@@ -273,6 +303,7 @@ OPCODE_DECODE:
     CLR.L D5
     CLR.L D6
     CLR.L D7
+
     
 	CMP.W #$4E71, D2		
 	BEQ print_nop			*check if value is NOP
@@ -343,6 +374,7 @@ invalid
 	BRA out
 invalid_ea
 	LEA ea, A1
+	ADD.L #2, A4
 	JSR print
 	JSR enter
 out	rts
@@ -597,13 +629,13 @@ next_ls_as_ro
 	BRA out
 	
 print_not
-	LEA not_ins, A1	*print instruction
-	JSR print
-	JSR size
 	MOVE.W D2, D3
 	AND.B #$3F, D3
 	CMP.B #$3C, D3
 	BEQ invalid_ea 	*NOT #4 <- not allowed (immediate addressing)
+	LEA not_ins, A1	*print instruction
+	JSR print
+	JSR size
 	JSR addr
 	JSR enter
 	BRA out
