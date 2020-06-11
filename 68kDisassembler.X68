@@ -20,13 +20,10 @@ HextoASCIIMsg       dc.b    'Completed hex to ASCII conversion',0
 ASCIItoHexMsg       dc.b    'Completed ASCII to hex conversion',CR,LF,0
 
 EndOfMemLoop        dc.b    '---Finished Reading Instructions---',CR,LF,0
-FlushScreenMsg      dc.b    'Press ENTER to continue with the next set of instructions',0
+FlushScreenMsg      dc.b    'Press ENTER to view the next set of instructions',0
 HelpMsg             dc.b    'Inputs must be in hexadecimal in this format --> FFFFFFFF',CR,LF,0
 ContinueOrNotMsg    dc.b    'Would you like to Disassemble more data or quit (y/n)',0
 ExitMsg             dc.b    'Exiting Program',0
-
-*START_ADDR_BUFFER  DS.B    256
-*END_ADDR_BUFFER    DS.B    256
 
 *size
 long 				DC.B 	'.L ',0
@@ -79,6 +76,7 @@ slash				DC.B	'/',0
 tab                 EQU     $9
 return				DC.B	CR,LF,0
 data				DC.B	'DATA $',0
+ea					DC.B 	'Invalid Effective Address', 0
 dollar				DC.B 	'$',0
     
 	ORG    $1000    *Start at address $1000
@@ -148,44 +146,39 @@ menu_cont
     rts
     
 GetStartAddress:         *Display input message
-	move.b	#14, D0
+	move.b		#14, D0
 	lea         InputMsg1,A1
-    trap #15
-    MOVEA.L #0, A1
+    trap 		#15
+    MOVEA.L 	#0, A1
     move.b      #2,D0
-    trap        #15
-        
-    jsr ASCIItoHex              *conversion to Hex
+    trap        #15   
+    jsr 		ASCIItoHex              *conversion to Hex
     * Address Located in D6
     movea.l     D6,A4           *move into address register 4
     rts
-    
     
 GetEndAddress:
     move.b      #14,D0          *Display input message
     lea         InputMsg2,A1
     trap        #15
-    MOVEA.L #0, A1
+    MOVEA.L 	#0, A1
     move.b      #2,D0
     trap        #15
     
     jsr         ASCIItoHex      *conversion to hex
     * Address Located in D6 (overwrite)
     movea.l     D6,A5           *move into address register 5
-    
-    
     rts
 
 
 ClearScreen:
-    lea     return,A1
-    move.b  #14,D0
-    trap    #15
-
-    cmp.w   #40,D1
-    beq     ClearDone
-    add.w   #1,D1
-    bra     ClearScreen
+    lea     	return,A1
+    move.b  	#14,D0
+    trap    	#15
+    cmp.w   	#40,D1
+    beq    		ClearDone
+    add.w   	#1,D1
+    bra     	ClearScreen
     
 ClearDone:
 	rts
@@ -196,8 +189,7 @@ MemSearch:
     * Set up instruction counter and place onto stack
     move.w      #0,D0
     move.w      D0,-(SP)
-    
-    jsr MemSearchLoop
+    jsr 		MemSearchLoop
     rts
     
 MemSearchLoop:
@@ -208,7 +200,7 @@ MemSearchLoop:
     
     * Get data from memory
     CLR D1
-    move.w     (A4),D2
+    move.w     	(A4),D2
     move.w		D2, D3	mutable copy in D3
     * OPCODE Word Located in D2, mutable copy in D3
     MOVE.L		A4, D1
@@ -232,21 +224,19 @@ MemSearchLoop:
     
 MemSearch_Done
     lea         EndOfMemLoop,A1 
-    jsr print
-    lea 	return, A1
-    jsr print
-    lea ContinueOrNotMsg, A1
-    jsr print
-    MOVE.B #5, D0
-    TRAP #15
-    lea return, A1
-    jsr print
-    CMP.B #121, D1    
-    beq MENU
+    jsr 		print
+    lea 		return, A1
+    jsr 		print
+    lea 		ContinueOrNotMsg, A1
+    jsr 		print
+    MOVE.B 		#5, D0
+    TRAP 		#15
+    jsr 		enter
+    CMP.B 		#121, D1    
+    beq 		MENU
     move.b      #14,D0
-    lea         ExitMsg,A1 
+    lea         ExitMsg, A1 
     trap        #15
-    
     move.b      #9,D0
     trap        #15
 
@@ -263,15 +253,11 @@ FlushScreen:
     rts
 
 FlushScreen_Input:
-
     clr     D1
-
     move.b  #5,D0
     trap    #15
-    
     cmp.b   #13,D1
     beq     Enter_Press_True    
-    
     bra     FlushScreen_Input
     
 Enter_Press_True:
@@ -353,6 +339,11 @@ invalid
 	MOVE.B #16, D2
 	MOVE.B 	#15, D0		
     TRAP #15
+	JSR enter
+	BRA out
+invalid_ea
+	LEA ea, A1
+	JSR print
 	JSR enter
 out	rts
   
@@ -591,7 +582,7 @@ ls_as_ro_mem			*check if immediate address is being shifted or rotated
 	MOVE.W D2, D3
 	AND.B #$3F, D3
 	CMP.B #$3C, D3
-	BEQ invalid 	*ROL #4 <- not allowed (immediate addressing)
+	BEQ invalid_ea	*ROL #4 <- not allowed (immediate addressing)
 	*if not immediate adress print normally 
 	MOVE.W D2, D3
 	ROL.W #7, D3	
@@ -612,7 +603,7 @@ print_not
 	MOVE.W D2, D3
 	AND.B #$3F, D3
 	CMP.B #$3C, D3
-	BEQ invalid 	*NOT #4 <- not allowed (immediate addressing)
+	BEQ invalid_ea 	*NOT #4 <- not allowed (immediate addressing)
 	JSR addr
 	JSR enter
 	BRA out
