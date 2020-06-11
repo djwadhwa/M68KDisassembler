@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 6/10/2020 6:55:43 PM
+Created On: 6/10/2020 8:22:18 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :  68k Disassebler
@@ -40,13 +40,13 @@ Created On: 6/10/2020 6:55:43 PM
 00000261                            36  *instructions
 00000261= 4E 4F 50 00               37  nop_ins             DC.B    'NOP',0
 00000265= 52 54 53 00               38  rts_ins             DC.B    'RTS',0
-00000269= 4D 4F 56 45 00            39  move_ins            DC.B    'MOVE',0
+00000269= 4D 4F 56 45 00            39  move_ins                DC.B    'MOVE',0
 0000026E= 4D 4F 56 45 51 20 00      40  moveq_ins           DC.B    'MOVEQ ',0
 00000275= 4D 4F 56 45 4D 00         41  movem_ins           DC.B    'MOVEM',0
 0000027B= 4D 4F 56 45 41 00         42  movea_ins           DC.B    'MOVEA',0
 00000281= 41 44 44 00               43  add_ins             DC.B    'ADD',0
-00000285= 41 44 44 41 00            44  adda_ins            DC.B    'ADDA',0
-0000028A= 41 44 44 51 00            45  addq_ins            DC.B    'ADDQ',0
+00000285= 41 44 44 41 00            44  adda_ins                DC.B    'ADDA',0
+0000028A= 41 44 44 51 00            45  addq_ins                DC.B    'ADDQ',0
 0000028F= 4F 52 00                  46  or_ins              DC.B    'OR',0
 00000292= 41 4E 44 00               47  and_ins             DC.B    'AND',0
 00000296= 53 55 42 00               48  sub_ins             DC.B    'SUB',0
@@ -56,7 +56,7 @@ Created On: 6/10/2020 6:55:43 PM
 000002A3= 4E 4F 54 00               52  not_ins             DC.B    'NOT',0
 000002A7= 4A 53 52 20 00            53  jsr_ins             DC.B    'JSR ',0
 000002AC= 4C 45 41 20 00            54  lea_ins             DC.B    'LEA ',0
-000002B1= 41 44 44 51 00            55  andq_ins            DC.B    'ADDQ',0
+000002B1= 41 44 44 51 00            55  andq_ins                DC.B    'ADDQ',0
 000002B6= 42 47 54 00               56  bgt_ins             DC.B    'BGT',0
 000002BA= 42 4C 45 00               57  ble_ins             DC.B    'BLE',0
 000002BE= 42 45 51 00               58  beq_ins             DC.B    'BEQ',0
@@ -64,25 +64,25 @@ Created On: 6/10/2020 6:55:43 PM
 000002C6                            60  
 000002C6                            61  *direction
 000002C6= 52 00                     62  right               DC.B    'R',0
-000002C8= 4C 00                     63  left                DC.B    'L',0
+000002C8= 4C 00                     63  left                    DC.B    'L',0
 000002CA                            64  
 000002CA                            65  *EA
 000002CA= 44 00                     66  D_reg               DC.B    'D',0
 000002CC= 41 00                     67  A_reg               DC.B    'A',0
 000002CE= 28 41 00                  68  open_paran          DC.B    '(A',0
 000002D1= 29 00                     69  close_paran         DC.B    ')',0
-000002D3= 29 2B 00                  70  post_inc            DC.B    ')+',0
+000002D3= 29 2B 00                  70  post_inc                DC.B    ')+',0
 000002D6= 2D 28 41 00               71  pre_dec             DC.B    '-(A',0
 000002DA                            72  
 000002DA                            73  *extra
 000002DA= 20 00                     74  space               DC.B    ' ',0
 000002DC= 2C 20 00                  75  comma               DC.B    ', ',0
 000002DF= 23 00                     76  pound               DC.B    '#',0
-000002E1= 2D 00                     77  dash                DC.B    '-',0
+000002E1= 2D 00                     77  dash                    DC.B    '-',0
 000002E3= 2F 00                     78  slash               DC.B    '/',0
-000002E5  =00000009                 79  tab                 EQU     $9
+000002E5  =00000009                 79  tab                  EQU     $9
 000002E5= 0D 0A 00                  80  return              DC.B    CR,LF,0
-000002E8= 44 41 54 41 20 24 00      81  data                DC.B    'DATA $',0
+000002E8= 44 41 54 41 20 24 00      81  data                    DC.B    'DATA $',0
 000002EF= 24 00                     82  dollar              DC.B    '$',0
 000002F1                            83      
 00001000                            84      ORG    $1000    *Start at address $1000
