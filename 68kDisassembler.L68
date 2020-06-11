@@ -1,7 +1,11 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
 <<<<<<< HEAD
+<<<<<<< HEAD
 Created On: 6/10/2020 8:22:18 PM
+=======
+Created On: 6/10/2020 7:20:53 PM
+>>>>>>> 2cc8b823c8e0238056a17ddca7c2bb782aed44bf
 =======
 Created On: 6/10/2020 7:20:53 PM
 >>>>>>> 2cc8b823c8e0238056a17ddca7c2bb782aed44bf
@@ -16,6 +20,7 @@ Created On: 6/10/2020 7:20:53 PM
 00000000  =0000000A                  8  LF  EQU $0A
 00000000                             9  
 00000000= 54 68 69 73 20 69 ...     10  StartingMsg         dc.b    'This is our 68k Disassembler',CR,LF,0
+<<<<<<< HEAD
 <<<<<<< HEAD
 0000001F= 43 72 65 61 74 6F ...     11  Creators            dc.b    'Creators: Mohammed Ali, DJ Wadhwa, Tarcisius',CR,LF,0
 0000004E                            12  
@@ -91,6 +96,8 @@ Created On: 6/10/2020 7:20:53 PM
 000002EF= 24 00                     82  dollar              DC.B    '$',0
 000002F1                            83      
 =======
+=======
+>>>>>>> 2cc8b823c8e0238056a17ddca7c2bb782aed44bf
 0000001F= 43 72 65 61 74 6F ...     11  Creators            dc.b    'Creators: Mohammed Ali, DJ Wadhwa, Tarcisius Hartanto',CR,LF,0
 00000057                            12  
 00000057= 53 74 61 72 74 20 ...     13  InputMsg1           dc.b    'Start by giving a starting address in range (00009000,00FFFFFF) ',0
@@ -164,6 +171,9 @@ Created On: 6/10/2020 7:20:53 PM
 000002F1= 44 41 54 41 20 24 00      81  data                DC.B    'DATA $',0
 000002F8= 24 00                     82  dollar              DC.B    '$',0
 000002FA                            83      
+<<<<<<< HEAD
+>>>>>>> 2cc8b823c8e0238056a17ddca7c2bb782aed44bf
+=======
 >>>>>>> 2cc8b823c8e0238056a17ddca7c2bb782aed44bf
 00001000                            84      ORG    $1000    *Start at address $1000
 00001000                            85  START:                  ; first instruction of program
