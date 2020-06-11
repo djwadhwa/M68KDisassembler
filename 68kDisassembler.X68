@@ -8,7 +8,7 @@ CR  EQU $0D
 LF  EQU $0A
 
 StartingMsg         dc.b    'This is our 68k Disassembler',CR,LF,0
-Creators            dc.b    'Creators: Mohammed Ali, DJ Wadhwa, Tarcisius',CR,LF,0
+Creators            dc.b    'Creators: Mohammed Ali, DJ Wadhwa, Tarcisius Hartanto',CR,LF,0
 
 InputMsg1           dc.b    'Start by giving a starting address in range (00009000,00FFFFFF) ',0
 InputMsg2           dc.b    'Now give an ending adress in range (00009000,00FFFFFF) ',0
@@ -36,13 +36,13 @@ byte 				DC.B 	'.B ',0
 *instructions
 nop_ins				DC.B 	'NOP',0
 rts_ins				DC.B 	'RTS',0
-move_ins			    DC.B 	'MOVE',0
+move_ins			DC.B 	'MOVE',0
 moveq_ins			DC.B 	'MOVEQ ',0
 movem_ins			DC.B 	'MOVEM',0
 movea_ins			DC.B 	'MOVEA',0
 add_ins				DC.B	'ADD',0
-adda_ins			    DC.B	'ADDA',0
-addq_ins			    DC.B	'ADDQ',0
+adda_ins			DC.B	'ADDA',0
+addq_ins			DC.B	'ADDQ',0
 or_ins				DC.B	'OR',0
 and_ins				DC.B	'AND',0
 sub_ins				DC.B	'SUB',0
@@ -52,7 +52,7 @@ ro_ins				DC.B	'RO',0
 not_ins				DC.B	'NOT',0
 jsr_ins				DC.B	'JSR ',0
 lea_ins				DC.B	'LEA ',0
-andq_ins			    DC.B	'ADDQ',0
+andq_ins			DC.B	'ADDQ',0
 bgt_ins				DC.B	'BGT',0
 ble_ins				DC.B	'BLE',0
 beq_ins				DC.B	'BEQ',0
@@ -60,25 +60,25 @@ bra_ins				DC.B	'BRA',0
 
 *direction
 right				DC.B	'R',0
-left				    DC.B	'L',0
+left				DC.B	'L',0
 
 *EA
 D_reg				DC.B	'D',0
 A_reg				DC.B 	'A',0
 open_paran			DC.B 	'(A',0
 close_paran			DC.B	')',0
-post_inc			    DC.B	')+',0
+post_inc			DC.B	')+',0
 pre_dec				DC.B	'-(A',0
 
 *extra
 space 				DC.B	' ',0
 comma				DC.B	', ',0
 pound				DC.B	'#',0
-dash				    DC.B 	'-',0
+dash				DC.B 	'-',0
 slash				DC.B	'/',0
-tab                  EQU     $9
+tab                 EQU     $9
 return				DC.B	CR,LF,0
-data				    DC.B	'DATA $',0
+data				DC.B	'DATA $',0
 dollar				DC.B 	'$',0
     
 	ORG    $1000    *Start at address $1000
@@ -132,8 +132,18 @@ Clear_Registers:
 MENU:
     jsr         Clear_Registers
     jsr         GetStartAddress
-    jsr         GetEndAddress
-    
+    jsr         GetEndAddress 
+    cmp.l		A4, A5
+    ble			invalid_input
+    bra 		menu_cont
+invalid_input
+	lea			EndAddressInc, A1
+	move.b 		#14, D0
+	trap 		#15
+	lea			return, A1
+	jsr			print
+	bra 		MENU
+menu_cont
     jsr         MemSearch
     rts
     
@@ -162,6 +172,8 @@ GetEndAddress:
     jsr         ASCIItoHex      *conversion to hex
     * Address Located in D6 (overwrite)
     movea.l     D6,A5           *move into address register 5
+    
+    
     rts
 
 
@@ -1215,7 +1227,8 @@ DONE:
 
     END    START        ; last line of source
 
+
 *~Font name~Courier New~
-*~Font size~16~
+*~Font size~12~
 *~Tab type~1~
 *~Tab size~4~
