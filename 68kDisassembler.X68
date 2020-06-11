@@ -80,58 +80,9 @@ tab                 EQU     $9
 return				DC.B	CR,LF,0
 data				DC.B	'DATA $',0
 dollar				DC.B 	'$',0
-    ORG    $1000    *Start at address $1000
+    
+	ORG    $1000    *Start at address $1000
 START:                  ; first instruction of program
-
-*---------- Test value, will remove in final build ----------*
-
-*	Move.W #$4E75,$00009234 *RTS
-*	MOVE.W #$3C05,$00009236 *MOVE.W D5,D6
-*	MOVE.W #$2447,$00009238 *MOVEA.L D7,A2
-*	MOVE.W #$4E71,$0000923A *NOP
-*	MOVE.W #$D95C,$0000923C *ADD.W D0,(A4)+
-*	MOVE.W #$D3C2,$0000923E *ADDA.L D2,A1
-*	MOVE.W #$9822,$00009240 *SUB.B -(A2),D4
-*	MOVE.W #$C246,$00009242 *AND.W D6,D1
-*	MOVE.W #$8593,$00009244 *OR.L D2,(A3)
-*	MOVE.W #$E0C7,$00009246 *ASR D7
-*	MOVE.W #$ED4C,$00009248 *LSL.W #6, D4
-*	MOVE.W #$E4BB,$0000924A *ROR.L D2, D3
-*	MOVE.W #$7404,$0000924C *MOVEQ #4, D2
-*	MOVE.W #$C23C,$0000924E *AND.B #12, D1
-*	MOVE.W #$000C,$00009250
-*	MOVE.W #$2C3C,$00009252	*MOVE.L #$12345678, D6
-*	MOVE.L #$12345678,$00009254
-*	MOVE.W #$D4F8,$00009258	*ADDA.W $12, A2
-*	MOVE.W #$0012,$0000925A
-*	MOVE.W #$4607,$0000925C	*NOT.B D7
-*	MOVE.W #$4EB9,$0000925E *JSR $9208
-*	MOVE.L #$00009208,$00009260
-*	MOVE.W #$4E90,$00009264 *JSR (A0)
-*	MOVE.W #$41D0,$00009266 *LEA (A0), A0 
-*	MOVE.W #$5E14,$00009268 *ADDQ.B #7, (A4)
-*    MOVE.W #$6EFE,$0000926A *BGT.B FE
-*    MOVE.W #$6F00,$0000926C *BLE.W FE7A
-*    MOVE.W #$FE7A,$0000926E
-*    MOVE.W #$6700,$00009270 *BEQ.W FE60
-*    MOVE.W #$FE60,$00009272
-*    MOVE.W #$4EB9,$00009274 *JSR 00009208
-*    MOVE.L #$00009208,$000009276
-*    MOVE.W #$48A1,$0000927A
-*    MOVE.W #$011F,$0000927C
-*    MOVE.W #$4C91,$0000927E
-*    MOVE.W #$FE00,$00009280
-*	MOVE.W #$C2BC, $00009000
-*	MOVE.L #$12345678, $00009002
-*	MOVE.W #$82F9 , $00009000
-*	MOVE.L #$12345678, $00009002 
-*	MOVE.W #$9441, $00009006
-*	Move.w #$C27C, $00009008
-*	move.w #$1234, $0000900A
-*	MOVE.L #$12345678, $00009002
-*---------- END Test ----------*
-
-
 
 *---------- Beginning Messages ----------*
     
@@ -144,7 +95,6 @@ START:                  ; first instruction of program
     trap        #15
     
     jsr         MENU
-    
     
 * ---------- END OF PROGRAM -------------*
 
@@ -219,28 +169,14 @@ ClearScreen:
     lea     return,A1
     move.b  #14,D0
     trap    #15
-    
-    *move.b  #9,D0
-    *trap    #15
-    
+
     cmp.w   #40,D1
     beq     ClearDone
     add.w   #1,D1
     bra     ClearScreen
-
-
-ClearScreen_40:
-    lea     return,A1
-    move.b  #14,D0
-    trap    #15
-    
-    cmp.l   #40,D1
-    beq     ClearDone
-    add.l   #1,D1
-    bra     ClearScreen_40
     
 ClearDone:
-    rts
+	rts
     
 MemSearch:
     move.l      #0,D1
@@ -282,7 +218,6 @@ MemSearchLoop:
     
     bra         MemSearchLoop
     
-    
 MemSearch_Done
     lea         EndOfMemLoop,A1 
     jsr print
@@ -313,8 +248,6 @@ FlushScreen:
     move.b      #14,D0
     trap        #15
     jsr         FlushScreen_Input
-    *move.l      #0,D1
-    *jsr         ClearScreen_40
     rts
 
 FlushScreen_Input:
@@ -331,9 +264,6 @@ FlushScreen_Input:
     
 Enter_Press_True:
     rts
-    
-
-    
 
 * -------- Start of Opcode Section -------*    
 
@@ -403,8 +333,7 @@ OPCODE_DECODE:
  	
  	CMP.W #$5000,D3
 	BEQ print_addq			*check if value is ANDQ 	
- 	
-	
+ 
 invalid 
 	LEA data, A1
 	JSR	print
@@ -414,12 +343,10 @@ invalid
     TRAP #15
 	JSR enter
 out	rts
-
-    
+  
 * -------- End of Opcode Section --------*   
 
 * --------- Print Instructions ----------*
-
 
 print:
 	CLR D0 
@@ -788,19 +715,61 @@ movem_direction
 	AND.W #$0400,D3
 	CMP.W #$0400,D3
 	BEQ mem_to_reg
-	JSR movem_predec
+	JSR movem_check_pre_post
 	LEA comma, A1
 	JSR print
 	JSR addr
 	BRA end_movem
 mem_to_reg
+	MOVE.W D2, D3
+	AND.W #$003F, D3
+	CMP.W #$0038, D3
+	BEQ fix_mem_order_word
+	CMP.W #$0039, D3
+	BEQ fix_mem_order_long
+	BRA movem_cont
+fix_mem_order_word
+	MOVE.L A4, A6
+	ADD.W #4, A6
+	MOVE.L (A6),D5
+	SWAP D5
+	MOVE.L D5, (A6)
+	CLR.L D5
+	BRA movem_cont
+fix_mem_order_long
+	MOVE.L A4, A6
+	ADD.W #2, A6
+	MOVE.W (A6),D5
+	ADD.W #2, A6
+	MOVE.L (A6),D6
+	SUB.W #2, A6
+	MOVE.L D6, (A6)
+	ADD.W #4, A6
+	MOVE.W D5, (A6)
+	CLR.L D5
+	CLR.L D6
+movem_cont
 	JSR addr
 	LEA comma, A1
 	JSR print
-	JSR movem_postinc
+	JSR movem_check_pre_post
 end_movem
 	JSR enter
 	BRA out
+	
+movem_check_pre_post:
+	MOVE.W D2, D3
+	AND.W #$0038, D3
+	CMP.W #$0020, D3
+	BEQ movem_check_pre
+	JSR movem_postinc
+	BRA movem_check_done
+movem_check_pre
+	JSR movem_predec
+movem_check_done
+	CLR.L D7
+	CLR.L D1
+	RTS
 
 print_direction:
 *print correct direction given direction bit
@@ -1037,78 +1006,69 @@ movem_predec:			*needs to be worked on
 	CLR.L D5
 	ADDA.W  #2,A4		*update current address
 	MOVE.W (A4),D5		*retrieve long data stored in the new current address
+	MOVE.W D5,D6
+	CLR.L D1
+	CLR.L D7
 	CMP.B #$00, D5
 	BEQ predec_skip_to_d
-	MOVE.W D5,D6
-	CLR.L D1
-	MOVE.B #0, D1
-a_loop1
-	ROL.B #1,D6
-	BCS a_loop1_done
-	ADD.B #1,D1
-	BRA a_loop1
-a_loop1_done
-	LEA A_reg,A1
-	JSR print
-	MOVE.B #3,D0
-	TRAP #15
-	CLR.L D7
-	MOVE.B #0, D7
-a_loop2
-	ROL.B #1,D6
-	BCC a_loop2_done
-	ADD.B #1,D7
-	ADD.B #1,D1
-	CMP.B #7, D1
-	BEQ a_loop2_done
-	BRA a_loop2
-a_loop2_done
+	LSL #8, D6
+predec_loop_a	
+	LSL #1, D6
+	BCC predec_inc_loop_a
+	BRA predec_check_first_a
+predec_inc_loop_a
+	ADD.B #1, D1
+	CMP.B #8, D1
+	BNE predec_loop_a
+	BRA predec_loop_a_done	
+predec_check_first_a
 	CMP.B #0, D7
-	BEQ predec_no_dash
-	LEA dash, A1
-	JSR print
-	LEA A_reg,A1
-	JSR print
-	MOVE.B #3,D0
-	TRAP #15
-predec_no_dash
-	CMP.L #$00FF,D5
-	BLE end_movem_predec
+	BEQ predec_first_a
 	LEA slash, A1
 	JSR print
-predec_skip_to_d	
+predec_first_a
+	LEA A_reg, A1
+	JSR print
+	MOVE.B #3, D0
+	TRAP #15
+	ADD.B #1, D1
+	ADD.B #1, D7
+	CMP.B #8, D1
+	BNE predec_loop_a
 	MOVE.W D5,D6
-	LSR.W #8,D6
+	AND.W #$FF00, D6
+	CMP.W #$00, D6
+	BEQ end_movem_predec
+predec_loop_a_done
+	MOVE.W D5,D6
+	LEA slash, A1
+	JSR print
 	CLR.L D1
-	MOVE.B #0, D1
-d_loop1
-	ROL.B #1,D6
-	BCS d_loop1_done
-	ADD.B #1,D1
-	BRA d_loop1
-d_loop1_done
-	LEA D_reg,A1
-	JSR print
-	MOVE.B #3,D0
-	TRAP #15
 	CLR.L D7
-	MOVE.B #0, D7
-d_loop2
-	ROL.B #1,D6
-	BCC d_loop2_done
-	ADD.B #1,D1
-	CMP.B #7, D1
-	BEQ d_loop2_done
-	BRA d_loop2
-d_loop2_done
+predec_skip_to_d
+predec_loop_d	
+	LSL #1, D6
+	BCC predec_inc_loop_d
+	BRA predec_check_first_d
+predec_inc_loop_d
+	ADD.B #1, D1
+	CMP.B #8, D1
+	BNE predec_loop_d	
+	BRA end_movem_predec
+predec_check_first_d
 	CMP.B #0, D7
-	BLE end_movem_predec
-	LEA dash, A1
+	BEQ predec_first_d
+	LEA slash, A1
 	JSR print
-	LEA D_reg,A1
+predec_first_d
+	LEA D_reg, A1
 	JSR print
-	MOVE.B #3,D0
+	MOVE.B #3, D0
 	TRAP #15
+	ADD.B #1, D1
+	ADD.B #1, D7
+	CMP.B #8, D1
+	BNE predec_loop_d
 end_movem_predec
 	RTS
 	
@@ -1117,77 +1077,69 @@ movem_postinc:			*needs to be worked on
 	ADDA.W  #2,A4		*update current address
 	MOVE.W (A4),D5		*retrieve long data stored in the new current address
 	MOVE.W D5,D6
-	LSR.W #8,D6
-	CMP.B #$00, D6
-	BEQ postinc_skip_to_d
 	CLR.L D1
-	MOVE.B #0, D1
-a_loop3
-	ROR.B #1,D6
-	BCS a_loop3_done
-	ADD.B #1,D1
-	BRA a_loop3
-a_loop3_done
-	LEA A_reg,A1
-	JSR print
-	MOVE.B #3,D0
-	TRAP #15
 	CLR.L D7
-	MOVE.B #0, D7
-a_loop4
-	ROR.B #1,D6
-	BCC a_loop4_done
-	ADD.B #1,D7
-	ADD.B #1,D1
-	CMP.B #7, D1
-	BEQ a_loop4_done
-	BRA a_loop4
-a_loop4_done
+	MOVE.W D5,D6
+	AND.W #$FF00, D6
+	CMP.W #$00, D6
+	BEQ postinc_skip_to_d
+	LSR #8, D6
+postinc_loop_a	
+	LSR #1, D6
+	BCC postinc_inc_loop_a
+	BRA postinc_check_first_a
+postinc_inc_loop_a
+	ADD.B #1, D1
+	CMP.B #8, D1
+	BNE postinc_loop_a
+	BRA postinc_loop_a_done	
+postinc_check_first_a
 	CMP.B #0, D7
-	BEQ postinc_no_dash
-	LEA dash, A1
-	JSR print
-	LEA A_reg,A1
-	JSR print
-	MOVE.B #3,D0
-	TRAP #15
-postinc_no_dash
-	CMP.B #$00, D5
-	BEQ end_movem_postinc
+	BEQ postinc_first_a
 	LEA slash, A1
 	JSR print
-postinc_skip_to_d	
+postinc_first_a
+	LEA A_reg, A1
+	JSR print
+	MOVE.B #3, D0
+	TRAP #15
+	ADD.B #1, D1
+	ADD.B #1, D7
+	CMP.B #8, D1
+	BNE postinc_loop_a
+	CMP.B #$00, D5
+	BEQ end_movem_postinc
+postinc_loop_a_done
 	MOVE.W D5,D6
+	LEA slash, A1
+	JSR print
 	CLR.L D1
-	MOVE.B #0, D1
-d_loop3
-	ROR.B #1,D6
-	BCS d_loop3_done
-	ADD.B #1,D1
-	BRA d_loop3
-d_loop3_done
-	LEA D_reg,A1
-	JSR print
-	MOVE.B #3,D0
-	TRAP #15
 	CLR.L D7
-	MOVE.B #0, D7
-d_loop4
-	ROR.B #1,D6
-	BCC d_loop4_done
-	ADD.B #1,D1
-	CMP.B #7, D1
-	BEQ d_loop4_done
-	BRA d_loop4
-d_loop4_done
+postinc_skip_to_d
+	MOVE.W D5,D6
+postinc_loop_d	
+	LSR #1, D6
+	BCC postinc_inc_loop_d
+	BRA postinc_check_first_d
+postinc_inc_loop_d
+	ADD.B #1, D1
+	CMP.B #8, D1
+	BNE postinc_loop_d	
+	BRA end_movem_postinc
+postinc_check_first_d
 	CMP.B #0, D7
-	BLE end_movem_postinc
-	LEA dash, A1
+	BEQ postinc_first_d
+	LEA slash, A1
 	JSR print
-	LEA D_reg,A1
+postinc_first_d
+	LEA D_reg, A1
 	JSR print
-	MOVE.B #3,D0
+	MOVE.B #3, D0
 	TRAP #15
+	ADD.B #1, D1
+	ADD.B #1, D7
+	CMP.B #8, D1
+	BNE postinc_loop_d
 end_movem_postinc
 	RTS
 
@@ -1253,8 +1205,6 @@ DONE:
 
         rts
         
-
-        
 * -- End of Hex to ASCII & ASCII to HEX --*
 
 * Put program code here
@@ -1264,9 +1214,7 @@ DONE:
 * Put variables and constants here
 
     END    START        ; last line of source
-
-
 *~Font name~Courier New~
-*~Font size~10~
+*~Font size~16~
 *~Tab type~1~
 *~Tab size~4~
